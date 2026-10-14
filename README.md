@@ -132,6 +132,16 @@ cargo run --release -- --preview-effect gg:reactiveRipple
 
 The new profile engine also supports optional `idle=`, `idle_seconds=` and `reactive=` fields in the existing version-1 `profile.conf`. Old profiles load unchanged; no changes to previously confirmed HID packets or the daemon's default native ripple. More information: [factory preset technical audit](docs/FACTORY_PRESETS.md).
 
+## Generate the Prism preset gallery remotely (no GUI/keyboard)
+
+For headless review, the Rust engine can render a complete SVG contact sheet of **31 historical factory-style presets at three animation phases**:
+
+```bash
+cargo run --release --bin prism-preview -- --output prism-presets-preview.svg
+```
+
+Open `prism-presets-preview.svg` in any browser when convenient. CI also publishes the file as the **`apex-mini-prism-factory-previews`** workflow artifact. All colors/keyboard positions are simulated by the independent engine, not captured from the actual Mini or from proprietary GG images. [Gallery and port audit](docs/FACTORY_PRESETS.md).
+
 ## Source repositories
 
 - [steelseriesgg-rs](https://github.com/Ven0m0/steelseriesgg-rs): native Rust GG replacement; generic transport patch preserved in `patches/`.

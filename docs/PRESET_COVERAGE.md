@@ -48,6 +48,10 @@ The first `apex-mini-gui` (Rust eframe/egui) editor exposes fourteen native rend
 
 **Pending on-device QA:** desktop rendering on KDE Wayland, applying edited profile and per-key override, persistence, actual animated effects, service stop/restoration. Only `solid` and `ripple` have prior hardware confirmation, separate from the new GUI.
 
+## Headless offline gallery for all 31 selectors
+
+The Rust `prism-preview` binary generates a standalone SVG page showing 31 factory-style previews × three timeline phases, including simulated keypress events for reactive effects. No GUI, physical keyboard, or remote HID access is necessary. GitHub Actions publishes this as the `apex-mini-prism-factory-previews` artifact. Gallery frames make independent renderer regressions inspectable, **not** GG-preset parity-certified.
+
 ## Official GG 108.3.0 Prism preset identifier inventory (31)
 
 **Source:** owner's locally inspected `SteelSeriesGG108.3.0.pkg` → PrismSyncV2 package → bundled Prism database migration SQL. This table reports **31 distinct `name_locale_key` identifiers referenced by the bundled migrations**, not necessarily 31 presets simultaneously available in the UI. Presets can be version-dependent, deleted, hidden, or special-case defaults. The exact visibility and per-device compatibility still require inspecting GG's current database and UI. The public repo contains **only identifiers and metadata**, not proprietary preset JSON.

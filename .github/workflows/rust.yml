@@ -28,3 +28,20 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y libxkbcommon-dev libwayland-dev libx11-dev libxcursor-dev libxi-dev libxrandr-dev libgl1-mesa-dev
       - name: Check optional desktop GUI
         run: cargo check --features gui --bin apex-mini-gui
+
+  gallery:
+    name: Offline Prism preset SVG gallery
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build headless gallery (no keyboard/device)
+        run: |
+          mkdir -p artifacts
+          cargo run --release --bin prism-preview -- --output artifacts/prism-presets-preview.svg
+      - name: Upload SVG visual regression artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: apex-mini-prism-factory-previews
+          path: artifacts/prism-presets-preview.svg
+          if-no-files-found: error
