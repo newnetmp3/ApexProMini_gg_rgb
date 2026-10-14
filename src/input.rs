@@ -1,22 +1,32 @@
-//! Linux evdev keyboard input for reactive illumination.
-//! No keyboard grab: ordinary typing continues uninterrupted.
-//! Reads only an explicitly selected event node belonging to USB 1038:161e.
-//! Processes key-down *codes* in memory; no typed text, files, or network access.
+//! Linux evdev keypress source for reactive keyboard lighting.
+//! This module NEVER grabs input, persists keystrokes, or transmits them.
+//! A reader is permitted only for a matching wired Apex Pro Mini (1038:161e).
 use std::fs::{self, File};
 use std::io::Read;
 use std::path::{Path, PathBuf};
-use std::sync::mpsc::{self, Receiver};
+use std::sync::mpsc::{self, Receiver, Sender};
 
-use crate::{PRODUCT_ID, VENDOR_ID};
+use crate::{ADDRESSABLE_HID_CODES, PRODUCT_ID, VENDOR_ID};
 
-/// Map Linux input-event-codes.h KEY_* values to USB keyboard HID usages.
-/// Unmapped keys (mouse/media/unknown usages) do not trigger lighting.
+pub const EVENT_BYTES: usize = 2 * std::mem::size_of::<isize>() + 8;
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum InputMessage {
+    /// Physical key-down mapped to a supported Mini HID key usage.
+    Press { hid: u8 },
+    /// Only sent for explicit diagnostics. Not retained or logged by the daemon.
+    Unmapped { linux_code: u16 },
+    /// A reader ended (e.g., the keyboard was unplugged).
+    ReaderStopped { device: PathBuf, reason: String },
+}
+
+/// Linux input-event-codes.h KEY_* -> USB keyboard HID usages.
 pub fn linux_key_to_hid(key: u16) -> Option<u8> {
     match key {
-        1 => Some(41),  // Escape
-        2..=11 => Some((key - 2) as u8 + 30), // numbers 1..0
-        12 => Some(45), 13 => Some(46), 14 => Some(42),
-        15 => Some(43),
+        1 => Some(41),
+        2..=10 => Some((key - 2) as u8 + 30),
+        11 => Some(39), // KEY_0 is USB HID 39 (not 39+1)
+        12 => Some(45), 13 => Some(46), 14 => Some(42), 15 => Some(43),
         16 => Some(20), 17 => Some(26), 18 => Some(8), 19 => Some(21), 20 => Some(23),
         21 => Some(28), 22 => Some(24), 23 => Some(12), 24 => Some(18), 25 => Some(19),
         26 => Some(47), 27 => Some(48), 28 => Some(40), 29 => Some(224),
@@ -52,25 +62,32 @@ fn is_target_usb_ancestor(path: &Path) -> bool {
     false
 }
 
+/// Probe the lowest 64 EV_KEY codes, where KEY_A = 30. Do not assume the
+/// keyboard is event0 or that the first USB HID interface emits typing events.
 fn has_letter_key_capability(path: &Path) -> bool {
-    let text = match fs::read_to_string(path.join("device/capabilities/key")) {
-        Ok(text) => text,
-        Err(_) => return false,
+    let Ok(bitmap) = fs::read_to_string(path.join("device/capabilities/key")) else {
+        return false;
     };
-    // A KEY_A press is key code 30. Key capability bitmap is printed in hex
-    // chunks, most-significant chunk first. The last chunk covers lowest codes.
-    text.split_whitespace().last()
-        .and_then(|part| u64::from_str_radix(part, 16).ok())
-        .is_some_and(|word| (word & (1_u64 << 30)) != 0)
+    let Some(lowest_word) = bitmap.split_whitespace().last() else {
+        return false;
+    };
+    u64::from_str_radix(lowest_word, 16)
+        .is_ok_and(|word| word & (1u64 << 30) != 0)
 }
 
 pub fn matching_event_devices() -> Vec<PathBuf> {
     let mut matches = Vec::new();
-    let Ok(nodes) = fs::read_dir("/sys/class/input") else { return matches; };
+    let Ok(nodes) = fs::read_dir("/sys/class/input") else {
+        return matches;
+    };
     for node in nodes.flatten() {
         let name = node.file_name().to_string_lossy().into_owned();
-        if !validate_event_name(&name) { continue; }
-        let Ok(full_path) = fs::canonicalize(node.path()) else { continue; };
+        if !validate_event_name(&name) {
+            continue;
+        }
+        let Ok(full_path) = fs::canonicalize(node.path()) else {
+            continue;
+        };
         if is_target_usb_ancestor(&full_path) && has_letter_key_capability(&node.path()) {
             matches.push(PathBuf::from("/dev/input").join(name));
         }
@@ -79,55 +96,141 @@ pub fn matching_event_devices() -> Vec<PathBuf> {
     matches
 }
 
-/// Spawn a reader for keydown events. The caller MUST choose an exact event path
-/// for the wired Mini's own keyboard interface. No arbitrary-device capture.
-pub fn start_reader(path: &Path) -> Result<Receiver<u8>, String> {
-    let name = path.file_name()
-        .and_then(|n| n.to_str())
-        .ok_or("Input must be /dev/input/eventN")?;
+fn validate_selected_device(path: &Path) -> Result<(), String> {
+    let name = path.file_name().and_then(|n| n.to_str())
+        .ok_or("Input must be an exact /dev/input/eventN path")?;
     if !validate_event_name(name) || path != Path::new("/dev/input").join(name) {
-        return Err("Expected an explicit /dev/input/eventN device path".into());
+        return Err("Input must be an exact /dev/input/eventN path".into());
     }
     if !matching_event_devices().iter().any(|candidate| candidate == path) {
-        return Err(format!("{path:?} is not a recognized wired Apex Pro Mini keyboard input device; use --list-inputs"));
+        return Err(format!("{path:?} is not a verified wired Apex Pro Mini keyboard input event node; inspect --list-inputs"));
     }
-    let mut input = File::open(path).map_err(|e| format!("Cannot read {path:?}: {e}. Check seat ACL/udev permissions; do not run as root by default."))?;
-    let (tx, rx) = mpsc::channel();
+    Ok(())
+}
+
+/// Extract Linux key-down codes without recording typed characters.
+/// Releases/repeats and non-key events are ignored.
+pub fn decode_linux_press(bytes: &[u8]) -> Option<u16> {
+    if bytes.len() != EVENT_BYTES {
+        return None;
+    }
+    let offset = 2 * std::mem::size_of::<isize>();
+    let event_type = u16::from_ne_bytes([bytes[offset], bytes[offset + 1]]);
+    let code = u16::from_ne_bytes([bytes[offset + 2], bytes[offset + 3]]);
+    let value = i32::from_ne_bytes(bytes[offset + 4..offset + 8].try_into().ok()?);
+    (event_type == 1 && value == 1).then_some(code)
+}
+
+/// Return an addressable Mini HID code for a single EV_KEY press.
+pub fn decode_keydown(bytes: &[u8]) -> Option<u8> {
+    let code = decode_linux_press(bytes)?;
+    let hid = linux_key_to_hid(code)?;
+    ADDRESSABLE_HID_CODES.contains(&hid).then_some(hid)
+}
+
+/// The process reads every validated wired-Mini keyboard event node rather
+/// than guessing which one is active. No evdev grabs, no key capture logs.
+pub fn start_readers(selection: Option<&Path>) -> Result<(Receiver<InputMessage>, usize), String> {
+    let paths = if let Some(path) = selection {
+        validate_selected_device(path)?;
+        vec![path.to_path_buf()]
+    } else {
+        matching_event_devices()
+    };
+    if paths.is_empty() {
+        return Err("No wired Mini input event device matched KEY_A capability. Run --list-inputs; check USB connection and /sys/class/input.".into());
+    }
+    let (sender, receiver) = mpsc::channel();
+    let mut active = 0usize;
+    let mut errors = Vec::new();
+    for path in paths {
+        let file = match File::open(&path) {
+            Ok(file) => file,
+            Err(err) => {
+                errors.push(format!("{}: {err}", path.display()));
+                continue;
+            }
+        };
+        spawn_reader(file, path, sender.clone());
+        active += 1;
+    }
+    drop(sender);
+    if active == 0 {
+        return Err(format!("Could not read any verified wired Mini input event nodes: {}. Check seat/udev ACLs (do not run as root blindly).", errors.join("; ")));
+    }
+    if !errors.is_empty() {
+        eprintln!("Warning: some Mini input nodes are unreadable: {}", errors.join("; "));
+    }
+    Ok((receiver, active))
+}
+
+fn spawn_reader(mut file: File, path: PathBuf, sender: Sender<InputMessage>) {
     std::thread::spawn(move || {
-        // input_event: struct timeval (two native longs), u16 type,
-        // u16 code, i32 value. Linux x86_64 uses 24 bytes.
-        let timeval_len = 2 * std::mem::size_of::<isize>();
-        let mut bytes = vec![0u8; timeval_len + 8];
-        while input.read_exact(&mut bytes).is_ok() {
-            let kind = u16::from_ne_bytes([bytes[timeval_len], bytes[timeval_len + 1]]);
-            let code = u16::from_ne_bytes([bytes[timeval_len + 2], bytes[timeval_len + 3]]);
-            let value = i32::from_ne_bytes(bytes[timeval_len + 4..timeval_len + 8].try_into().unwrap());
-            if kind == 1 && value == 1 {
-                if let Some(hid) = linux_key_to_hid(code) {
-                    if tx.send(hid).is_err() { break; }
+        let mut bytes = [0u8; EVENT_BYTES];
+        loop {
+            match file.read_exact(&mut bytes) {
+                Ok(()) => {
+                    if let Some(code) = decode_linux_press(&bytes) {
+                        let message = match linux_key_to_hid(code)
+                            .filter(|hid| ADDRESSABLE_HID_CODES.contains(hid)) {
+                            Some(hid) => InputMessage::Press { hid },
+                            None => InputMessage::Unmapped { linux_code: code },
+                        };
+                        if sender.send(message).is_err() {
+                            return;
+                        }
+                    }
+                }
+                Err(err) => {
+                    let _ = sender.send(InputMessage::ReaderStopped {
+                        device: path,
+                        reason: err.to_string(),
+                    });
+                    return;
                 }
             }
         }
     });
-    Ok(rx)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn raw_event(kind: u16, key: u16, value: i32) -> [u8; EVENT_BYTES] {
+        let mut bytes = [0u8; EVENT_BYTES];
+        let pos = 2 * std::mem::size_of::<isize>();
+        bytes[pos..pos + 2].copy_from_slice(&kind.to_ne_bytes());
+        bytes[pos + 2..pos + 4].copy_from_slice(&key.to_ne_bytes());
+        bytes[pos + 4..pos + 8].copy_from_slice(&value.to_ne_bytes());
+        bytes
+    }
+
     #[test]
-    fn maps_wired_mini_letter_keypresses() {
-        assert_eq!(linux_key_to_hid(30), Some(4));  // A
-        assert_eq!(linux_key_to_hid(31), Some(22)); // S
-        assert_eq!(linux_key_to_hid(17), Some(26)); // W
-        assert_eq!(linux_key_to_hid(57), Some(44)); // Space
-        assert_eq!(linux_key_to_hid(999), None);
+    fn decodes_native_evdev_keydown_and_filters_repeats() {
+        assert_eq!(decode_keydown(&raw_event(1, 30, 1)), Some(4)); // A
+        assert_eq!(decode_keydown(&raw_event(1, 31, 1)), Some(22)); // S
+        assert_eq!(decode_keydown(&raw_event(1, 11, 1)), Some(39)); // 0 regression
+        assert_eq!(decode_keydown(&raw_event(1, 30, 0)), None);
+        assert_eq!(decode_keydown(&raw_event(1, 30, 2)), None);
+        assert_eq!(decode_keydown(&raw_event(0, 30, 1)), None);
+        assert_eq!(decode_keydown(&raw_event(1, 41, 1)), None); // not in Mini layout
+        assert_eq!(decode_keydown(&[]), None);
     }
     #[test]
-    fn input_node_name_is_strictly_validated() {
+    fn validates_event_node_name_strictly() {
         assert!(validate_event_name("event12"));
         assert!(!validate_event_name("event0/evil"));
         assert!(!validate_event_name("event"));
         assert!(!validate_event_name("mice"));
+    }
+    #[test]
+    fn expected_linux_hid_mappings() {
+        assert_eq!(linux_key_to_hid(30), Some(4));
+        assert_eq!(linux_key_to_hid(31), Some(22));
+        assert_eq!(linux_key_to_hid(17), Some(26));
+        assert_eq!(linux_key_to_hid(57), Some(44));
+        assert_eq!(linux_key_to_hid(11), Some(39));
+        assert_eq!(linux_key_to_hid(999), None);
     }
 }

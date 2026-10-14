@@ -139,7 +139,7 @@ fn send_output(mut file: File, data: [u8; OUTPUT_REPORT_BYTES]) -> Result<(), St
 
 fn run(args: &[String]) -> Result<(), String> {
     #[cfg(target_os = "linux")]
-    if args.first().is_some_and(|arg| matches!(arg.as_str(), "--list-inputs" | "--effect" | "--preview-effect")) {
+    if args.first().is_some_and(|arg| matches!(arg.as_str(), "--list-inputs" | "--test-input" | "--effect" | "--preview-effect")) {
         return animate::run_effect(args);
     }
     match args {

@@ -31,7 +31,7 @@ The `direct_write` byte layout is:
 
 For a single red `A` key, the expected report prefix is `00 40 01 04 FF 00 00`; remaining bytes are zero. The `clear_direct_write` Output prefix is `00 41` padded to 65 bytes. The independent Rust serialization logic and offline tests live in `src/lib.rs`. **No proprietary descriptor text or password is committed.**
 
-**Hardware verification (owner report, 2026-10-14):** the owner ran the dedicated A-key red RGB test and stated **“IT WORKED! ‘A’ turned red!”**. This **confirms the `0x40` Feature report produces a visible LED response** for that key on this keyboard. **Follow-up hardware evidence:** the owner confirmed **S turned green** under the same `0x40` path and that **`0x41` clear restored the normal onboard lighting**. Multi-key payloads and continuous animations are not yet verified.
+**Hardware verification (owner report, 2026-10-14):** the owner ran the dedicated A-key red RGB test and stated **“IT WORKED! ‘A’ turned red!”**. This **confirms the `0x40` Feature report produces a visible LED response** for that key on this keyboard. **Follow-up hardware evidence:** the owner confirmed **S turned green** under the same `0x40` path and that **`0x41` clear restored the normal onboard lighting**. Subsequent owner observation verified a whole-board 68-key solid blue frame. **The keypress ripple did not trigger**; that appears separate from the proven RGB send format and remains under investigation.
 
 ## Safety and unanswered questions
 

@@ -2,7 +2,7 @@
 
 Native Linux research and driver-development workspace for the **wired SteelSeries Apex Pro Mini (USB `1038:161e`)**, using verified HID observations and local, legally obtained SteelSeries GG resources.
 
-**Current status:** **Verified on real hardware:** A key red, S key green, and `0x41` clear restoring onboard lighting. **New in development:** nine native full-key RGB renderers, including rainbow/wave/breathing and keypress ripple/reactive using a verified physical Linux input node. The new whole-keyboard animations still need on-device testing and **are not yet certified as exact SteelSeries GG Prism presets**.
+**Current status:** **Verified on real hardware:** A key red, S key green, and `0x41` clear restoring onboard lighting. **New in development:** nine native full-key RGB renderers, including rainbow/wave/breathing and keypress ripple/reactive using a verified physical Linux input node. Whole-board solid blue has been physically verified; **keypress ripple failed to react to keypresses** and its Linux evdev monitoring is being diagnosed and **are not yet certified as exact SteelSeries GG Prism presets**.
 
 ## Quick start (read-only)
 
@@ -64,6 +64,30 @@ Replace `eventN` with the exact keyboard input node printed by `--list-inputs`. 
 Effects currently available: **solid, gradient, rainbow, wave, breathing, color-shift, sparkle, ripple, reactive**. See [`docs/PRESET_COVERAGE.md`](docs/PRESET_COVERAGE.md) for the longer-term goal of **matching every official GG default preset**, including **31 official GG 108.3 preset identifiers already recovered from packaged SQL migrations** (not necessarily all simultaneously visible in GG), profiles, and base/idle/reactive layers.
 
 **New effect rendering and keypress tracking need physical verification.** Avoid assuming a successful write means the effects are visually correct.
+
+## Linux keypress monitoring (diagnostics and optional daemon)
+
+The first ripple trial did not react even though solid full-keyboard blue worked. This build improves event monitoring, tries **all** verified Mini keyboard event nodes by default, and adds a read-only diagnostic:
+
+```bash
+./target/release/apex-mini-rgb --list-inputs
+./target/release/apex-mini-rgb --test-input --seconds 10
+# Tap A, S, Space; should print USB HID codes 4, 22, 44.
+./target/release/apex-mini-rgb --effect ripple --color 081020 --accent ff5500 --confirm-device-write
+```
+
+Ripple automatically discovers the input device; `--input /dev/input/eventN` remains an optional explicit override. The monitor is passive and **does not grab typing or persist keystrokes**. The diagnostic prints numeric key IDs only on request.
+
+You can optionally install a `systemd --user` service that keeps ripple running between terminal sessions (initially **disabled**):
+
+```bash
+bash scripts/install-user-service.sh
+systemctl --user enable --now apex-mini-ripple.service
+# To stop and return to onboard lighting:
+systemctl --user disable --now apex-mini-ripple.service
+```
+
+**Important:** the daemon does not by itself solve a broken evdev input stream. Verify `--test-input` before enabling it. See [`docs/SERVICE.md`](docs/SERVICE.md) for permissions and troubleshooting; don't run input monitoring as root by default.
 
 ## Source repositories
 
