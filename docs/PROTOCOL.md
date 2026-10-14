@@ -31,13 +31,13 @@ The `direct_write` byte layout is:
 
 For a single red `A` key, the expected report prefix is `00 40 01 04 FF 00 00`; remaining bytes are zero. The `clear_direct_write` Output prefix is `00 41` padded to 65 bytes. The independent Rust serialization logic and offline tests live in `src/lib.rs`. **No proprietary descriptor text or password is committed.**
 
-**Hardware verification (owner report, 2026-10-14):** the owner ran the dedicated A-key red RGB test and stated **“IT WORKED! ‘A’ turned red!”**. This **confirms the `0x40` Feature report produces a visible LED response** for that key on this keyboard. It does **not** verify the `0x41` clear Output operation, any other key, or multi-key payloads.
+**Hardware verification (owner report, 2026-10-14):** the owner ran the dedicated A-key red RGB test and stated **“IT WORKED! ‘A’ turned red!”**. This **confirms the `0x40` Feature report produces a visible LED response** for that key on this keyboard. **Follow-up hardware evidence:** the owner confirmed **S turned green** under the same `0x40` path and that **`0x41` clear restored the normal onboard lighting**. Multi-key payloads and continuous animations are not yet verified.
 
 ## Safety and unanswered questions
 
 - The `apex-mini-rgb` binary performs only read-only discovery unless the exact `--confirm-device-write` flag is provided.
 - It checks `1038:161e`, vendor usage page `0xffc0`, and exact report sizes before opening a HID node for writing.
-- It has an opt-in **one-key RGB Feature** operation and a separate **clear-direct-mode Output** operation. No flashing, actuation, profile writes, or arbitrary HID commands.
+- It has verified opt-in **single-key RGB Feature** and **clear-direct-mode Output** operations. The new opt-in effects runtime composes full 68-key frames from the same serializer; until hardware tests, full-frame operation remains unverified. No flashing, actuation, profile writes, or arbitrary HID commands.
 - This A-key test worked without a documented manual GG initialization sequence. Other runtime states, profiles, or firmware variants may still behave differently; no general initialization guarantee has been established.
 - The A-key LED response was **visually confirmed by the owner**. Continue requiring visible confirmation separately for every new RGB feature; successful `ioctl` or `write` alone is insufficient.
 

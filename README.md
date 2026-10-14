@@ -2,7 +2,7 @@
 
 Native Linux research and driver-development workspace for the **wired SteelSeries Apex Pro Mini (USB `1038:161e`)**, using verified HID observations and local, legally obtained SteelSeries GG resources.
 
-**Current status:** **First hardware success:** the wired Mini's A key **turned red** using the new Linux Rust `0x40` / 513-byte Feature command (owner-verified 2026-10-14). The `0x41` / 65-byte Output clear packet is implemented but **not yet confirmed working on the physical keyboard**; neither are other keys, multiple simultaneous colors, effects, or profiles.
+**Current status:** **Verified on real hardware:** A key red, S key green, and `0x41` clear restoring onboard lighting. **New in development:** nine native full-key RGB renderers, including rainbow/wave/breathing and keypress ripple/reactive using a verified physical Linux input node. The new whole-keyboard animations still need on-device testing and **are not yet certified as exact SteelSeries GG Prism presets**.
 
 ## Quick start (read-only)
 
@@ -34,9 +34,36 @@ cargo build --release
 ./target/release/apex-mini-rgb --clear --confirm-device-write
 ```
 
-The two final commands **change RGB state**; the A-key color write has been verified on real hardware, but clear/direct-mode restoration still needs confirmation. Run them only after reviewing read-only output and accepting that lighting may need a keyboard reconnect or native profile reset. There is no firmware, macro, or actuation functionality in this crate. The `clear` command restores control to onboard lighting if the firmware honors its official command; a USB success message alone does not prove it.
+The two final commands **change RGB state**; both single-key lighting and clear/restoration have now been verified on real hardware. Run them only after reviewing read-only output and accepting that lighting may need a keyboard reconnect or native profile reset. There is no firmware, macro, or actuation functionality in this crate. The `clear` command restores control to onboard lighting if the firmware honors its official command; a USB success message alone does not prove it.
 
 See [`docs/PROTOCOL.md`](docs/PROTOCOL.md) for the recovered frame layout and [`docs/ROADMAP.md`](docs/ROADMAP.md) for acceptance criteria.
+
+## Full-keyboard lighting effects (experimental, opt-in)
+
+```bash
+cargo test --all-targets
+cargo build --release
+
+# Safe preview: constructs full 68-key RGB packet but writes nothing.
+./target/release/apex-mini-rgb --preview-effect rainbow
+
+# Control ALL keys with a static solid color, then press Ctrl+C to clear.
+./target/release/apex-mini-rgb --effect solid --color 0033ff --confirm-device-write
+
+# Moving full-key rainbow and animated breathing.
+./target/release/apex-mini-rgb --effect wave --speed 1.2 --brightness 0.6 --confirm-device-write
+./target/release/apex-mini-rgb --effect breathing --color ff0066 --confirm-device-write
+
+# Keypress-triggered spatial ripple:
+./target/release/apex-mini-rgb --list-inputs
+./target/release/apex-mini-rgb --effect ripple --input /dev/input/eventN --color 081020 --accent ff5500 --confirm-device-write
+```
+
+Replace `eventN` with the exact keyboard input node printed by `--list-inputs`. It must be readable by your user, and the application verifies that it belongs to USB `1038:161e`. No keyboard grabbing or typed text logging. The effect stays active until Ctrl+C; normal onboard lighting should return via the already hardware-verified `0x41` clear report.
+
+Effects currently available: **solid, gradient, rainbow, wave, breathing, color-shift, sparkle, ripple, reactive**. See [`docs/PRESET_COVERAGE.md`](docs/PRESET_COVERAGE.md) for the longer-term goal of **matching every official GG default preset**, including **31 official GG 108.3 preset identifiers already recovered from packaged SQL migrations** (not necessarily all simultaneously visible in GG), profiles, and base/idle/reactive layers.
+
+**New effect rendering and keypress tracking need physical verification.** Avoid assuming a successful write means the effects are visually correct.
 
 ## Source repositories
 
