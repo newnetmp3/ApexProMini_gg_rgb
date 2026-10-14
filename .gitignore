@@ -1,0 +1,28 @@
+# Proprietary vendor artifacts and local research
+.private/
+*.edevice
+*.migration
+*.pkg
+*.exe
+*.msi
+*.dmg
+*.bin
+*.pgp
+*.decrypted
+*.sqlite
+*.db
+firmware/
+deviceSpecifications/
+# Python and Rust builds
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+target/
+# Editor and generated outputs
+.DS_Store
+*.log
+*.pcap
+*.pcapng
+*.usbmon
+*.hidlog
