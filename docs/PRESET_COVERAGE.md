@@ -38,9 +38,9 @@ The approximate US-60% spatial layout presently used for position-dependent effe
 
 The source data was recovered from the owner's GG 108.3 Prism SQL migrations and independently summarized into **30 complete graphics definitions**. A later GG106 migration **renames** the pre-existing `faze` record to `redPulse`; these are 31 *historical display keys*, not 31 simultaneously distinct factory effects.
 
-**All 31 identifiers are now selectable via `gg:<name>`**, including `gg:prism`, `gg:comet`, `gg:aqua`, `gg:reactiveRipple`, and `gg:redPulse`. Independent Rust rendering uses the historic palette, time, signed wavelength and geometry class from a representative variant; all 68-key packets pass offline tests. The new idle + reactive compositor allows independent base / inactivity / keypress overlays, and the old ripple profile remains backward compatible.
+**All 31 identifiers are now selectable via `gg:<name>`**, including `gg:prism`, `gg:comet`, `gg:aqua`, `gg:reactiveRipple`, and `gg:redPulse`. Independent Rust rendering uses the historic palette, time, signed wavelength and geometry class from a representative variant; all 68-key packets pass offline tests. A further 36 regional variants are selected by approximate source-row and sparse-column masks, pending device geometry QA. The new idle + reactive compositor allows independent base / inactivity / keypress overlays, and the old ripple profile remains backward compatible.
 
-**Parity is incomplete:** multi-region masks/variants, actual GG foreground/background/aperture compositor, reactive/heatmap thresholds, and device-side visual matching. Neither working preview nor compile success constitutes a verified vendor preset port. [Detailed engineering audit](FACTORY_PRESETS.md).
+**Parity is incomplete:** **36 extra regional variants now source-parameterized but physically uncalibrated**, actual GG foreground/background/aperture compositor, reactive/heatmap thresholds, and device-side visual matching. Neither working preview nor compile success constitutes a verified vendor preset port. [Detailed engineering audit](FACTORY_PRESETS.md).
 
 ## Native GUI foundation
 
@@ -54,7 +54,7 @@ The first `apex-mini-gui` (Rust eframe/egui) editor exposes fourteen native rend
 
 | Official preset identifier suffix | Catalog mode | Native coverage |
 |---|---|---|
-| aqua | Base / idle | **Parameter-derived `gg:aqua` preview available**; full GG parity unverified, regional variants pending |
+| aqua | Base / idle | **Parameter-derived `gg:aqua` preview available**; full GG parity unverified, regional physical alignment pending |
 | chasingGhosts | Base / idle | **Parameter-derived `gg:chasingGhosts` preview available**; full GG parity unverified |
 | clown | Base / idle | **Parameter-derived `gg:clown` preview available**; full GG parity unverified |
 | colorFusion | Base / idle | **Parameter-derived `gg:colorFusion` preview available**; full GG parity unverified, regional variants pending |
