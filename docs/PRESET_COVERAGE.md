@@ -68,7 +68,7 @@ The Rust `prism-preview` binary generates a standalone SVG page showing 31 facto
 | drain | Base / idle | **Parameter-derived `gg:drain` preview available**; full GG parity unverified |
 | faze | Base / idle | **Parameter-derived `gg:faze` preview available**; full GG parity unverified |
 | freeway | Base / idle | **Parameter-derived `gg:freeway` preview available**; full GG parity unverified, regional variants pending |
-| haze | Base / idle | **Parameter-derived `gg:haze` preview available**; full GG parity unverified |
+| haze | Base / idle | **FG/BG/aperture layer prototype**; source colors/periods; GG mask math unverified |
 | heatmap | Base / idle | **Parameter-derived `gg:heatmap` preview available**; full GG parity unverified |
 | pride | Base / idle | **Parameter-derived `gg:pride` preview available**; full GG parity unverified, regional variants pending |
 | prism | Base / idle | **Parameter-derived `gg:prism` preview available**; full GG parity unverified |
@@ -87,8 +87,8 @@ The Rust `prism-preview` binary generates a standalone SVG page showing 31 facto
 | twilight | Base / idle | **Parameter-derived `gg:twilight` preview available**; full GG parity unverified, regional variants pending |
 | vaporDreams | Base / idle | **Parameter-derived `gg:vaporDreams` preview available**; full GG parity unverified |
 | wabashAndLake | Needs version-specific inspection | **Parameter-derived `gg:wabashAndLake` preview available**; full GG parity unverified, regional variants pending |
-| warpDrive | Base / idle | **Parameter-derived `gg:warpDrive` preview available**; full GG parity unverified |
-| westCoast | Base / idle | **Parameter-derived `gg:westCoast` preview available**; full GG parity unverified |
+| warpDrive | Base / idle | **FG/aperture layer prototype**; exact GG mask math unverified |
+| westCoast | Base / idle | **FG/BG/aperture layer prototype**; source colors/periods; GG mask math unverified |
 
 The three **reactive** identifiers are especially important for keypress-triggered lighting. The native ripple infrastructure now works after the device-only udev access fix, but this is not proof of official preset parity. Our first `ripple` and `reactive` implementations are infrastructure to reach them; we should replicate the official preset's timing, color, origin and propagation from its authorized local configuration data instead of treating generic effects as finished ports.
 
