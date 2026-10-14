@@ -61,7 +61,7 @@ cargo build --release
 
 Replace `eventN` with the exact keyboard input node printed by `--list-inputs`. It must be readable by your user, and the application verifies that it belongs to USB `1038:161e`. No keyboard grabbing or typed text logging. The effect stays active until Ctrl+C; normal onboard lighting should return via the already hardware-verified `0x41` clear report.
 
-Effects currently available: **solid, gradient, rainbow, wave, breathing, color-shift, sparkle, ripple, reactive**. See [`docs/PRESET_COVERAGE.md`](docs/PRESET_COVERAGE.md) for the longer-term goal of **matching every official GG default preset**, including presets' original names, profiles, and base/idle/reactive layers.
+Effects currently available: **solid, gradient, rainbow, wave, breathing, color-shift, sparkle, ripple, reactive**. See [`docs/PRESET_COVERAGE.md`](docs/PRESET_COVERAGE.md) for the longer-term goal of **matching every official GG default preset**, including **31 official GG 108.3 preset identifiers already recovered from packaged SQL migrations** (not necessarily all simultaneously visible in GG), profiles, and base/idle/reactive layers.
 
 **New effect rendering and keypress tracking need physical verification.** Avoid assuming a successful write means the effects are visually correct.
 
