@@ -1,10 +1,12 @@
 //! Native desktop control center (egui/eframe), runs on X11 and Wayland.
 //! No direct HID writes or keyboard event reads: systemd owns the sole RGB
 //! writer. Profile editing is local and application-safe by default.
-use apex_pro_mini::effects::{self, KeyHit, Preset};
+use apex_pro_mini::effects::{KeyHit, Preset};
+use apex_pro_mini::effects;
 use apex_pro_mini::profile::{color_hex, default_profile_path, Profile};
 use apex_pro_mini::Rgb;
 use apex_pro_mini::factory;
+use apex_pro_mini::layers::Stack;
 use eframe::egui::{self, Color32, FontId, Pos2, Rect, Sense, Vec2};
 use std::process::Command;
 use std::time::Instant;
@@ -138,7 +140,14 @@ impl ControlCenter {
     fn colors(&self) -> Vec<apex_pro_mini::KeyColor> {
         let seconds = self.clock.elapsed().as_secs_f32();
         let hits = self.preview_hit.iter().copied().filter(|hit| seconds - hit.when < 2.5).collect::<Vec<_>>();
-        let mut colors = effects::frame(self.profile.preset, self.profile.config, seconds, &hits);
+        let mut colors = Stack {
+            base: self.profile.preset,
+            idle: self.profile.idle,
+            reactive: self.profile.reactive,
+            idle_after_seconds: self.profile.idle_after_seconds,
+        }.render(self.profile.config, seconds,
+            self.preview_hit.map(|hit| hit.when).unwrap_or(0.0),
+            &hits);
         for item in &mut colors {
             if let Some(color) = self.profile.key_overrides.get(&item.hid) {
                 item.rgb = *color;
@@ -280,6 +289,55 @@ impl eframe::App for ControlCenter {
                 });
             });
             ui.separator();
+            ui.collapsing("Base + Idle + Reactive layers", |ui| {
+                ui.small("Optional GG-style idle timer and reactive overlay; preview is simulated.");
+                let current_idle = self.profile.idle.map(Preset::as_str).unwrap_or("none");
+                egui::ComboBox::from_id_salt("idle_mode")
+                    .selected_text(format!("Idle: {current_idle}"))
+                    .show_ui(ui, |ui| {
+                        if ui.selectable_value(&mut self.profile.idle, None, "None").changed() {
+                            self.dirty = true;
+                        }
+                        for preset in EFFECTS {
+                            if !preset.needs_key_events()
+                                && ui.selectable_value(&mut self.profile.idle, Some(preset), preset.as_str()).changed() {
+                                self.dirty = true;
+                            }
+                        }
+                        for (i, spec) in factory::PRESETS.iter().enumerate() {
+                            let mode = Preset::Factory(i as u8);
+                            if !mode.needs_key_events()
+                                && ui.selectable_value(&mut self.profile.idle, Some(mode), spec.cli).changed() {
+                                self.dirty = true;
+                            }
+                        }
+                    });
+                self.dirty |= ui.add(egui::Slider::new(
+                    &mut self.profile.idle_after_seconds, 1.0..=120.0,
+                ).text("Idle after (seconds)")).changed();
+                let current_reactive = self.profile.reactive.map(Preset::as_str).unwrap_or("none");
+                egui::ComboBox::from_id_salt("reactive_overlay")
+                    .selected_text(format!("Reactive: {current_reactive}"))
+                    .show_ui(ui, |ui| {
+                        if ui.selectable_value(&mut self.profile.reactive, None, "None").changed() {
+                            self.dirty = true;
+                        }
+                        for preset in EFFECTS {
+                            if preset.needs_key_events()
+                                && ui.selectable_value(&mut self.profile.reactive, Some(preset), preset.as_str()).changed() {
+                                self.dirty = true;
+                            }
+                        }
+                        for (i, spec) in factory::PRESETS.iter().enumerate() {
+                            let mode = Preset::Factory(i as u8);
+                            if mode.needs_key_events()
+                                && ui.selectable_value(&mut self.profile.reactive, Some(mode), spec.cli).changed() {
+                                self.dirty = true;
+                            }
+                        }
+                    });
+            });
+            ui.separator();
             ui.heading("Service controls");
             if ui.button("Save profile (no device change)").clicked() { self.action("save"); }
             if ui.button("Apply & restart lighting").clicked() { self.action("apply"); }
@@ -294,7 +352,7 @@ impl eframe::App for ControlCenter {
             ui.separator();
             ui.label(self.feedback.as_str());
             ui.add_space(8.0);
-            ui.checkbox(&mut self.show_catalog, "Show SteelSeries GG preset migration catalog (31 identifiers)");
+            ui.checkbox(&mut self.show_catalog, "Show 31 GG factory-style preview entries and fidelity status");
             if self.show_catalog {
                 ui.label("These historical entries are now selectable as parameter-derived previews. None is certified as faithful GG parity.");
                 egui::ScrollArea::vertical().max_height(185.0).show(ui, |ui| {
