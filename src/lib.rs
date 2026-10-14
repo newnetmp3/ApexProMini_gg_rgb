@@ -9,6 +9,7 @@
 
 pub mod effects;
 pub mod factory;
+pub mod layers;
 pub mod profile;
 #[cfg(target_os = "linux")]
 pub mod input;
