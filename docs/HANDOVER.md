@@ -9,6 +9,7 @@
 **Latest merged effects milestone:** [PR #12](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/12), squash SHA `ca2deeca512a43a44a1dc08aaa65bcf5468b319c`, adds independent foreground/background/aperture scene rendering for West Coast, Haze and Warp Drive. All PR Rust, Clippy, GUI compilation, Python and SVG gallery checks passed. This is source-parameter-derived, with an **approximate aperture shader**, not exact SteelSeries GG parity. Owner remains remote; GUI/device QA deferred. Owner is remote, so **defer GUI/hardware QA** and concentrate on factory preset conversion. Actual GG 108.3 Prism SQL migrations were recovered offline. We found **30 complete source definitions**, and GG 106's `redPulse` name is a rename of existing `faze`. `src/factory.rs` implements all **31 historical identifiers as parameter-derived renderable previews**, not 31 equivalent vendor algorithms. A new `src/layers.rs` base/idle/reactive compositor and backward-compatible profile extensions are integrated with the daemon and GUI. **Hardware acceptance for these new factory modes is pending**. See `docs/FACTORY_PRESETS.md`.  
 **Latest merged effects milestone:** [PR #13](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/13), squash SHA `72172a31a26e93f73e2e29e69144c24af6d13538`. Full ordered compositor with opacity, four blends, spatial transforms and apertures; West Coast, Haze and Warp Drive refactored into recipes. Headless Rust tests + strict Clippy, native GUI compile, Python diagnostics and SVG gallery CI all passed. **GG shader parity and live hardware QA remain unverified; user is still remote.**  
 **Implementation summary:** `src/compositor.rs` introduces a pure ordered-scene renderer with Normal/Add/Multiply/Screen blends, opacity, origin/scale/rotation, spatial repetition/phase offsets, masked apertures and independent per-layer animation. `src/graphics.rs` now represents West Coast, Haze and Warp Drive as layer recipes using that engine, while preserving the existing Mini HID transport. Offline scene/motion/mask tests and `docs/COMPOSITOR.md` added. **These are new, independent approximations, NOT recovered vendor shader code or proven GG parity.** GUI and keyboard testing remain deferred at the user's request.  
+**Current effects-only branch:** `feature/prism-reactive-timing-envelopes`: three distinct, independently modeled factory reactive modes, using original GG 108.3 trigger periods: Ripple 250ms, Line 500ms, Single Key 1250ms. New `src/reactive_factory.rs` isolates motion and input hit lifespan from the original native ripple, supports multiple overlapping hits, and supplies adaptive event-history timeouts for slow speed profiles (Single Key 12.5s at 0.1x; the old fixed 2.5s cut it off). CLI daemon, GUI simulated preview and headless SVG previews are integrated. **Factory spatial/fade curves remain approximations; user is remote, so physical testing remains deferred.** See `docs/REACTIVE_FACTORY.md`.  
 **Hardware:** Wired SteelSeries Apex Pro Mini `1038:161e`; owner runs Arch Linux, KDE Wayland.
 
 ## Verified milestones
@@ -34,6 +35,8 @@
 13. **2026-10-14 multi-graphics compositor stage (PR #12 merged; all CI green):** New `src/graphics.rs` handles separate gradient foreground, background and bounded spatial aperture layers for three complex presets (West Coast, Haze, Warp Drive) without changing any driver writes. Exact vendor shader masks remain unrecovered; this is a partial, testable structural port.
 
 14. **2026-10-14 independent compositing milestone ([PR #13](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/13) merged, all CI green):** reusable ordered z-stack, four channel blend modes, alpha, origin/rotation/scale, spatial repetitions, phase offsets and mask options. West Coast/Haze/Warp Drive now use declarative scene recipes with source-derived RGB/period fields, but **not vendor mask/opacity math**. Full 68-key offline frame tests and numerical color fixtures; underlying HID/proven ripple untouched. See `docs/COMPOSITOR.md`.
+
+15. **2026-10-14 source-duration reactive milestone (branch `feature/prism-reactive-timing-envelopes`; CI and PR pending):** Factory Ripple/Line/Single Key each have explicit hit envelopes tied to source nominal period, radial/row/exact-key isolation, bounded overlap, and invalid/expired filtering; `Stack::key_history_seconds` prevents truncation for slow GG factory presets without changing native ripple's earlier 2.5s event retention. GUI simulated reactive-overlay preview and offline SVG phase-relative time samples updated. Only functional periods are source verified; real GG curves remain to be compared.
 
 ## Safety: do not conflate these conditions
 
@@ -73,10 +76,11 @@
 
 1. **PR #13 merged** as `72172a31a26e93f73e2e29e69144c24af6d13538`; all Rust unit tests, strict Clippy, Python diagnostics, native GUI compilation and offline SVG gallery checks green.
 2. **Implemented now:** pure ordered color-layer compositor with four blend modes, alpha, origin/scale/rotation, repeats and apertures. Three compound scenes migrated with unchanged known-safe HID transport.
-3. **Next fidelity task:** recover original GG aperture/mask movement and layer order/opacity from authorized sample observations; add time/key/color golden fixtures. Do not call current cosine masks vendor equivalents.
-4. Calibrate source six-row Prism grid to the wired Mini's five physical rows, mapping all 36 region variants accurately; offline coordinates then owner physical QA later.
-5. Continue reactives' source-defined falloff/trigger envelopes and analog heatmap design **without unverified Hall sensor reads or arbitrary HID commands**.
-6. Owner is remote; don't request GUI or keyboard access. Review offline SVG gallery built in PR #11; postpone physical preset-by-preset acceptance until owner returns.
+3. **Current PR in progress:** independent factory reactive envelope for `gg:reactiveRipple`, `gg:reactiveLine`, `gg:reactiveSingleKey`, nominal periods 250/500/1250ms, bounded overlap, phase-aware SVG sampling, slow event-history fix for daemon and GUI. Merge after full CI passes; preserve native confirmed ripple behavior.
+4. **After this PR:** recover original GG reactive/aperture/mask movement and factory layer order/opacity from authorized sample observations; add time/key/color golden fixtures. Do not call independent Gaussian/cosine masks vendor equivalents.
+5. Calibrate source six-row Prism grid to the wired Mini's five physical rows, mapping all 36 region variants accurately; offline coordinates then owner physical QA later.
+6. Continue exact reactive falloff, multi-hit policies and analog heatmap design **without unverified Hall sensor reads or arbitrary HID commands**.
+7. Owner is remote; don't request GUI or keyboard access. Review offline SVG gallery built in PR #11; postpone physical preset-by-preset acceptance until owner returns.
 
 ## Latest merged permission fix — PR #6, active-seat Mini-only udev rule
 
@@ -136,6 +140,8 @@
 - **2026-10-14 PR [#12](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/12):** Source-parameter-derived foreground/background/aperture implementation for West Coast, Haze and Warp Drive via `src/graphics.rs`. GUI compilation, headless Rust/Clippy, Python diagnostics and SVG gallery CI all passed. Squash SHA `ca2deeca512a43a44a1dc08aaa65bcf5468b319c`. Proprietary shader math remains unverified; no owner hardware QA while remote.
 
 - **2026-10-14 [PR #13](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/13):** New `src/compositor.rs` with ordered graphic layers, four blend modes, alpha, spatial transforms and repeatable masks; three compound scenes migrated. Rust/Clippy, GUI compile, Python and SVG-gallery CI passed. Squash SHA `72172a31a26e93f73e2e29e69144c24af6d13538`. Independent model, not vendor shader parity.
+
+- **2026-10-14 factory reactive milestone (branch pending PR):** Source periods for GG Ripple/Line/Single Key, dedicated pure Rust envelopes, adaptive hit history for slow speed, GUI simulation and phase-relative headless gallery. Rust unit tests include single-key isolation, line/radial travel, overlapping events and 12.5-second slow fade. No HID protocol changes or physical testing. See `docs/REACTIVE_FACTORY.md`.
 
 ## Rolling documentation convention
 
