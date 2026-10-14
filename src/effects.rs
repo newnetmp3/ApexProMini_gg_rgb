@@ -158,7 +158,15 @@ pub fn frame(preset: Preset, settings: Config, seconds: f32, hits: &[KeyHit]) ->
     ADDRESSABLE_HID_CODES.iter().copied().map(|hid| {
         let (x, y) = coords(hid);
         let rgb = match preset {
-            Preset::Factory(index) => crate::factory::render(index, hid, x, y, seconds, settings, hits),
+            Preset::Factory(index) => {
+                // Factory-preview spacing honors approximate 1u/2u/5.5u
+                // physical key widths. Preserve the owner's working native
+                // ripple geometry until a real device calibration is done.
+                let factory_position = crate::layout::position(hid).expect("mapped 68 Mini keys");
+                crate::factory::render(
+                    index, hid, factory_position.x, factory_position.y, seconds, settings, hits,
+                )
+            },
             Preset::Solid => settings.base,
             Preset::Breathing => dim(settings.base, 0.07 + 0.93 * (0.5 + 0.5 * (t * 3.2).sin())),
             Preset::Rainbow => hue(x * 0.9 + y * 0.13 + t * 0.11),
