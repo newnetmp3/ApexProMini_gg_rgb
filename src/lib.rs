@@ -13,6 +13,7 @@ pub mod layers;
 pub mod regions;
 pub mod graphics;
 pub mod reactive_factory;
+pub mod layout;
 pub mod compositor;
 pub mod profile;
 #[cfg(target_os = "linux")]
