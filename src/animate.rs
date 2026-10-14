@@ -144,13 +144,21 @@ fn run_animation(options: Options) -> Result<(), String> {
     }
 
     let mut next_frame = Instant::now();
-    let outcome = loop {
+    let outcome = 'animation: loop {
         if !RUNNING.load(Ordering::Relaxed) { break Ok(()); }
         let elapsed = clock.elapsed().as_secs_f32();
         if let Some(receiver) = &input_rx {
-            while let Ok(hid) = receiver.try_recv() {
-                hits.push(KeyHit { hid, when: elapsed });
-                if hits.len() > 32 { hits.remove(0); }
+            loop {
+                match receiver.try_recv() {
+                    Ok(hid) => {
+                        hits.push(KeyHit { hid, when: elapsed });
+                        if hits.len() > 32 { hits.remove(0); }
+                    }
+                    Err(std::sync::mpsc::TryRecvError::Empty) => break,
+                    Err(std::sync::mpsc::TryRecvError::Disconnected) => {
+                        break 'animation Err("Mini keyboard input event device disconnected or unreadable. Restoring onboard lighting.".into());
+                    }
+                }
             }
             hits.retain(|hit| elapsed - hit.when < 2.5);
         }
