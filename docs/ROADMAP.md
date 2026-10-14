@@ -4,7 +4,7 @@ Status as of **2026-10-14**. Completion indicates reproducible evidence, not pla
 
 | Milestone | Status | Acceptance criterion |
 |---|---|---|
-| 0. Establish repository, research provenance, documentation, tests | In progress (bootstrap PR) | Files land on `main`, tests pass |
+| 0. Establish repository, research provenance, documentation, tests | **Complete — PR #1** | Merged to `main` at `5364b999`; GitHub Actions Python tests passed |
 | 1. Identify hardware endpoints and report sizes | **Verified** | Owner's Linux HID descriptor shows `0xFFC0`, Output 65, Feature 513 |
 | 2. Fix generic HID transport in upstream checkout | **Verified by logs** | Correct framing and actual APPLY sent; not yet merged upstream |
 | 3. Recover and inspect official Mini device definitions | **Verified locally** | Password extracted locally; two exact Mini descriptors decrypt successfully |
