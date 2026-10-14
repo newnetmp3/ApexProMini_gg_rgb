@@ -11,7 +11,34 @@ python3 -m unittest discover -s tests -v
 
 The probe only reads `/sys/class/hidraw` and report descriptors; it never opens any `/dev/hidraw*` node for writing.
 
-## 2. Work on the upstream transport separately
+## 2. Build and test the independent native Rust RGB utility
+
+The Rust crate has no external dependencies. On Arch Linux, install `rust` and `cargo` if needed, then:
+
+```bash
+cargo test --all-targets
+cargo build --release
+
+# Read-only: must discover exactly one Mini control endpoint with Feature=513, Output=65
+./target/release/apex-mini-rgb
+
+# Offline packet preview; does not open a HID node:
+./target/release/apex-mini-rgb --dry-run A ff0000
+```
+
+**Optional owner-approved hardware test** (only if the above succeeds):
+
+```bash
+./target/release/apex-mini-rgb --write-key A ff0000 --confirm-device-write
+# Look at the keyboard: did the A key become red?
+./target/release/apex-mini-rgb --clear --confirm-device-write
+```
+
+The last two commands write HID reports and can temporarily alter onboard lighting. They do not update firmware or actuation. The user must decide to run them; the CLI does not send anything without the complete explicit confirmation argument.
+
+The Mini's `0x40` (direct Feature 513-byte) and `0x41` (clear Output 65-byte) layout is derived from official GG descriptors, **not yet verified to produce a visible lighting response**. If no LEDs change, save the exact console output and do not attempt random reports.
+
+## 3. Work on the upstream transport separately
 
 The owner has an existing `steelseriesgg-rs` checkout, with the transport patch already applied; **do not reapply it blindly**. For a clean upstream clone, inspect and apply the patch:
 
@@ -26,7 +53,7 @@ cargo build --release
 
 If `git apply --check` fails, inspect `git diff` before continuing: the upstream patch may already be present. Never reset a modified worktree just to apply this patch.
 
-## 3. Local-only GG descriptor decryption
+## 4. Local-only GG descriptor decryption
 
 This research used the owner's own GG Windows `SteelSeriesEngine.exe` and macOS `.edevice` assets. Do **not** commit those files, the recovered passphrase, or decrypted plaintext. `.private/` is excluded by `.gitignore`.
 
@@ -51,10 +78,10 @@ This produces `.private/apex_pro_mini.edevice.scm` with owner-only permissions, 
 
 Only make independent protocol notes and original implementation code public; do not paste the decrypted source into issues, commits, or PRs.
 
-## 4. Hardware write policy
+## 5. Hardware write policy
 
-No current code in this repository writes to the keyboard. Mini's observed Feature report is 513 bytes: the experimental 645-byte TKL-2023 packet is **incompatible**, and must not be forced or truncated. Do not attempt firmware update, unknown HID command fuzzing, or actuation settings changes. New write-capable tests must be opt-in and independently verified first.
+Only the explicit Rust CLI test commands `--write-key` and `--clear` can write to the keyboard, and only with `--confirm-device-write`. The default discovery and dry-run commands remain read-only. Mini's observed Feature report is 513 bytes: the experimental 645-byte TKL-2023 packet is **incompatible**, and must not be forced or truncated. Do not attempt firmware update, unknown HID command fuzzing, or actuation settings changes. New write-capable tests must be opt-in and independently verified first.
 
-## 5. Development handover
+## 6. Development handover
 
 After every meaningful implementation milestone, update `docs/HANDOVER.md` **and** `docs/ROADMAP.md` together with tests and evidence. Use `docs/PROTOCOL.md` to separate confirmed bytes from hypotheses.
