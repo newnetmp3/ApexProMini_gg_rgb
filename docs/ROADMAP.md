@@ -62,9 +62,9 @@ Added a reusable `base + idle + reactive` pure lighting compositor, compatible w
 
 **Next fidelity gates** after the gallery: GG foreground/background/aperture compositor, six-row to Mini-five-row coordinate calibration, analog Hall sensor readback, timing/opacity matching and device-side comparisons. SVG color regression is **not** proof of true vendor parity.
 
-## Source-derived compound graphics (in progress)
+## Source-derived compound graphics (PR #12 merged; shader parity pending)
 
-The `feature/prism-composite-graphics` branch adds an independent pure renderer for `westCoast`, `haze` and `warpDrive` foreground/background/aperture structures. Gradient colors, periods, wave signs and geometry classes are sourced from authorized local GG configuration analysis, but the bounded cosine-based aperture interpolation and compositing equations are our own. Offline Rust frame tests apply; full vendor shader parity is **not** achieved or owner-verified.
+[PR #12](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/12) merged as `ca2deeca512a43a44a1dc08aaa65bcf5468b319c` with Rust, Clippy, GUI, Python and SVG-gallery CI passing. It adds an independent pure renderer for `westCoast`, `haze` and `warpDrive` foreground/background/aperture structures. Gradient colors, periods, wave signs and geometry classes are sourced from authorized local GG configuration analysis, but the bounded cosine-based aperture interpolation and compositing equations are our own. Offline Rust frame tests apply; full vendor shader parity is **not** achieved or owner-verified.
 
 Next fidelity milestone: z-ordered multi-graphic accumulation, mask anchor/origin transforms, opacity and repetition semantics, and reactive aperture timing.
 
