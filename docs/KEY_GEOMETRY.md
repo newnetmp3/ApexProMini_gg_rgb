@@ -1,6 +1,6 @@
 # Wired Apex Pro Mini: provisional width-aware factory-effect geometry
 
-**Milestone:** `feature/factory-key-geometry-v2`. Owner remains remote, so this implementation is **software-tested only**. It does not claim to reproduce the vendor's original coordinate map, nor any physical keyboard optical measurements.
+**Merged milestone:** [PR #15](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/15), squash SHA `40b40eddea874dca364a448e9bdca220903a09eb`. All Rust/Clippy, Python diagnostic, native GUI compile, and offline SVG gallery CI checks passed. Owner remains remote, so this implementation is **software-tested only**. It does not claim to reproduce the vendor's original coordinate map, nor any physical keyboard optical measurements.
 
 ## Reason for change
 
