@@ -11,14 +11,20 @@ Status as of **2026-10-14**. Completion means stated acceptance criteria have ac
 | 4. Establish Mini-specific RGB serializer | **Static specification verified** | New inherited `base_apex_2022_wired` confirms `0x40` Feature, `0x41` Output and field layouts |
 | 5. Implement independent Rust Mini codec | **Complete — PR #2** | Squash SHA `2ccb9f67d63d`; bounded frame builders, golden-byte unit tests, guarded device selection, Rust tests and Clippy green on branch |
 | 6. Verify real Mini static RGB/per-key selection | **Whole-board solid RGB hardware verified** | A red, S green, `0x41` clear restored, **all physical keys turned blue**. Different simultaneous colors and layout fidelity still pending |
-| 7. Lighting effects and Prism profiles | **Static verified; input diagnostics merged — PR #5** | Owner confirmed solid whole-board blue. First ripple did not respond. Auto multi-node evdev, read-only keypress diagnostic and optional user service merged (SHA `608c668e`); input/ripple behavior awaits hardware retest |
+| 7. Lighting effects and Prism profiles | **Static verified; evdev access blocker confirmed** | Owner's Mini `event11`/`event12` were detected but `EACCES` prevented reading any keypresses. Device-scoped `71-` `uaccess` rule and explicit installer being added; ripple hardware retest pending |
 | 8. Read-only device state/firmware status | Not started | Real readback without altering settings |
 | 9. Actuation/Rapid Trigger/remapping | Not started | Independently verified commands and rollback |
 | 10. Package Linux service/application | Not started | Native installation, permissions, regressions and CI |
 
-**Confirmed hardware:** owner observed **A red, S green, clear restoring onboard lighting, and the entire keyboard solid blue**. Full-board static frames work. **Ripple did not respond to keypresses**; input monitoring needs diagnosis and retest before it can be marked complete.
+**Confirmed hardware:** A red, S green, clear restoring onboard lighting, and entire keyboard solid blue. **Confirmed ripple blocker:** `Permission denied (os error 13)` for both USB Mini `/dev/input/event11` and `event12`. The input stream cannot be read until a scoped ACL is applied; ripple itself still needs live verification.
 
 **Latest development:** PR [#4](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/4), squash SHA `570ccddee9c254bd2de28c7e9b1fb62ece192756`, merged full-keyboard effect infrastructure and catalog. **Next hardware gates:** read-only Linux evdev `--test-input` showing A/S keydowns; then actual keypress-triggered ripple and spatial layout accuracy. Do not mark these as working before physical feedback.
+
+## Input device access and service acceptance criteria
+
+- When a `--list-inputs` scan detects the device but reports `[no read access]`, offer only a dedicated Mini `uaccess` seat ACL rule; avoid `sudo` services, global `input` group grants and world-readable evdev.
+- Rule must match `event*` keyboard inputs under `1038:161e`, with a `71-` prefix that precedes systemd `73-seat-late.rules`.
+- Owner must explicitly install via `scripts/install-input-permissions.sh`, reconnect the keyboard, and confirm read-only `--test-input` works before ripple is claimed fixed.
 
 ## Service and reactive input acceptance criteria
 
