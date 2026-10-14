@@ -11,7 +11,7 @@ Status as of **2026-10-14**. Completion means stated acceptance criteria have ac
 | 4. Establish Mini-specific RGB serializer | **Static specification verified** | New inherited `base_apex_2022_wired` confirms `0x40` Feature, `0x41` Output and field layouts |
 | 5. Implement independent Rust Mini codec | **Complete — PR #2** | Squash SHA `2ccb9f67d63d`; bounded frame builders, golden-byte unit tests, guarded device selection, Rust tests and Clippy green on branch |
 | 6. Verify real Mini static RGB/per-key selection | **Whole-board solid RGB hardware verified** | A red, S green, `0x41` clear restored, **all physical keys turned blue**. Different simultaneous colors and layout fidelity still pending |
-| 7. Lighting effects and Prism profiles | **31 historical selectors with distinct reactive source-timing model; exact parity pending** | Recovered 30 complete GG 108.3 preset definitions plus GG106 redPulse/faze rename; source-derived palettes, durations, signed wavelengths and phase types render offline for 68 Mini keys. Base/idle/reactive compositor + profiles added; 36 additional masked variants implemented across eight records, with approximate Mini coordinate alignment; vendor graphics compositor incomplete |
+| 7. Lighting effects and Prism profiles | **31 historical selectors with distinct reactive source-timing model; exact parity pending** | Recovered 30 complete GG 108.3 preset definitions plus GG106 redPulse/faze rename; source-derived palettes, durations, signed wavelengths and phase types render offline for 68 Mini keys. Base/idle/reactive compositor and profiles; 36 masked regional variants across eight records; **width-aware provisional physical Mini geometry added for factory modes** while native working ripple remains unchanged. Exact source-grid calibration and vendor graphics shader parity pending |
 | 8. Read-only device state/firmware status | Not started | Real readback without altering settings |
 | 9. Actuation/Rapid Trigger/remapping | Not started | Independently verified commands and rollback |
 | 10. Package Linux service/application | **Service ripple verified; GUI implementation merged (PR #9), owner QA pending** | User service enabled/active with two input readers; owner also verified visible ripples while it runs. Logon/reconnect/stop restoration and distribution packaging pending |
@@ -89,6 +89,14 @@ The pure Rust engine handles separately timed overlapping events, no-press basel
 **Software acceptance passed:** headless Rust unit tests, strict Clippy, GUI compile, Python diagnostic tests and SVG gallery. **Physical Mini and actual vendor behavior remain untested** while owner is remote. See [`docs/REACTIVE_FACTORY.md`](REACTIVE_FACTORY.md).
 
 **Remaining work:** source-aperture timing and shader reconstruction, exact key geometry, analog Hall input, layered priority and full side-by-side GG preset parity. This implementation does **not** establish exact vendor equivalent behavior.
+
+## Factory-effect physical geometry and historical region mapping
+
+**In progress, branch `feature/factory-key-geometry-v2`:** Provisional 60% Mini layout now models five 15u-wide rows, real-width long-key centers (5.5u Space, 2u Backspace, 2.25u Enter, 2.25u/2.75u Shift) and all 68 known addressable HID usages. Factory effects and their read-only SVG preview use this consistent map; **owner-verified native ripple uses the previous geometry without modification**.
+
+**Offline acceptance gates:** 68-code coverage, bounded positions, row widths, same-row versus other-row key relationships, source six-row/22-column approximate projection, valid 513-byte frames, and no native-ripple regressions. **Physical acceptance pending:** exact HID-to-LED positions, international variants and 36 GG source-region placements; real-world comparison deferred while owner is remote.
+
+Technical reference: [`docs/KEY_GEOMETRY.md`](KEY_GEOMETRY.md). This is an independent coordinate improvement, **not a certified GG layout port**.
 
 ## Engineering quality gates
 
