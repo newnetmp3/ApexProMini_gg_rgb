@@ -11,7 +11,7 @@ Status as of **2026-10-14**. Completion means stated acceptance criteria have ac
 | 4. Establish Mini-specific RGB serializer | **Static specification verified** | New inherited `base_apex_2022_wired` confirms `0x40` Feature, `0x41` Output and field layouts |
 | 5. Implement independent Rust Mini codec | **Complete — PR #2** | Squash SHA `2ccb9f67d63d`; bounded frame builders, golden-byte unit tests, guarded device selection, Rust tests and Clippy green on branch |
 | 6. Verify real Mini static RGB/per-key selection | **Whole-board solid RGB hardware verified** | A red, S green, `0x41` clear restored, **all physical keys turned blue**. Different simultaneous colors and layout fidelity still pending |
-| 7. Lighting effects and Prism profiles | **31 historical selectors implemented as factory-style previews; exact parity pending** | Recovered 30 complete GG 108.3 preset definitions plus GG106 redPulse/faze rename; source-derived palettes, durations, signed wavelengths and phase types render offline for 68 Mini keys. Base/idle/reactive compositor + profiles added; 36 additional masked variants implemented across eight records, with approximate Mini coordinate alignment; vendor graphics compositor incomplete |
+| 7. Lighting effects and Prism profiles | **31 historical selectors with distinct reactive source-timing model; exact parity pending** | Recovered 30 complete GG 108.3 preset definitions plus GG106 redPulse/faze rename; source-derived palettes, durations, signed wavelengths and phase types render offline for 68 Mini keys. Base/idle/reactive compositor + profiles added; 36 additional masked variants implemented across eight records, with approximate Mini coordinate alignment; vendor graphics compositor incomplete |
 | 8. Read-only device state/firmware status | Not started | Real readback without altering settings |
 | 9. Actuation/Rapid Trigger/remapping | Not started | Independently verified commands and rollback |
 | 10. Package Linux service/application | **Service ripple verified; GUI implementation merged (PR #9), owner QA pending** | User service enabled/active with two input readers; owner also verified visible ripples while it runs. Logon/reconnect/stop restoration and distribution packaging pending |
@@ -79,6 +79,16 @@ The target is **all default presets shipped by official SteelSeries GG Prism**, 
 **Merged [PR #13](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/13)**, squash SHA `72172a31a26e93f73e2e29e69144c24af6d13538`; Rust/Clippy, native GUI compile, Python and SVG-gallery CI green. Source GG 108.3 functional palette/timing/wavelength values remain distinct from our independently designed shader. `src/compositor.rs` defines reusable ordered scene recipes; effects are rendered offline and the 513-byte Feature serializer is unchanged. New tests cover layer order, blending/opacity, transforms, mask repetition and numerical color samples.
 
 **Not yet accepted as full parity:** actual GG shader equations, per-preset layer order and alpha, source 6-row / Mini 5-row geometry, reactive heat envelopes and analog readback, real-world visual comparison. For fidelity tracking see [`docs/COMPOSITOR.md`](COMPOSITOR.md) and [`docs/FACTORY_PRESETS.md`](FACTORY_PRESETS.md).
+
+## Factory reactive source-period envelopes (development milestone)
+
+Branch `feature/prism-reactive-timing-envelopes` builds independent **GG 108.3-derived** keypress-trigger profiles: `gg:reactiveRipple` (250ms), `gg:reactiveLine` (500ms) and `gg:reactiveSingleKey` (1250ms). Nominal periods come from the historical GG migration; expanding radial/row wavefront and exact-key fade curves are **new approximations**, not reproduced GG source shaders.
+
+The pure Rust engine handles separately timed overlapping events, no-press baseline, invalid/future events, exact expiry and bounded fade. The daemon and GUI now choose event-history windows appropriate for **source period × profile speed**, fixing truncation for slow Single Key while preserving original working native ripple. The offline gallery evaluates samples relative to each source trigger duration.
+
+**Acceptance:** headless Rust unit tests, strict Clippy, GUI compile, Python diagnostic tests and SVG gallery must pass before merging; physical Mini and actual vendor behavior remain untested while owner is remote. See [`docs/REACTIVE_FACTORY.md`](REACTIVE_FACTORY.md).
+
+**Remaining work:** source-aperture timing and shader reconstruction, exact key geometry, analog Hall input, layered priority and full side-by-side GG preset parity. This implementation does **not** establish exact vendor equivalent behavior.
 
 ## Engineering quality gates
 
