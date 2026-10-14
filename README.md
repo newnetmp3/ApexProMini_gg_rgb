@@ -121,7 +121,7 @@ This explicitly installs a **Mini-only** `uaccess` seat ACL rule to `/etc/udev/r
 
 ## Offline Prism factory-style preset previews
 
-The owner's official GG 108.3 Prism SQL migrations yielded **30 complete historical effects definitions**; GG106 later renamed `faze` to `redPulse`. Every one of the **31 historical preset identifiers** now has an independent `gg:<name>` preview mode, using compact source-derived color/timing and spatial parameters. These are *partial ports* pending GG compositor, region masking, actual visual comparisons and hardware QA—not claims of exact SteelSeries preset fidelity.
+The owner's official GG 108.3 Prism SQL migrations yielded **30 complete historical effects definitions**; GG106 later renamed `faze` to `redPulse`. Every one of the **31 historical preset identifiers** now has an independent `gg:<name>` preview mode, using compact source-derived color/timing and spatial parameters. These are *partial ports* including **36 additional region variants** but pending GG compositor accuracy, Mini coordinate calibration, actual visual comparisons and hardware QA—not claims of exact SteelSeries preset fidelity.
 
 ```bash
 cargo test --all-targets
