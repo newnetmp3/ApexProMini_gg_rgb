@@ -1,150 +1,149 @@
-//! Small, independent graphic-layer compositor for GG-style foreground,
-//! background and aperture recipes. No vendor code/JSON is embedded.
+//! Historical Prism multi-graphic scene definitions.
 //!
-//! Parameters come from the owner's authorized GG Prism migrations; the
-//! phase/masking and compositing math is our own approximate implementation.
-//! Exact Prism GPU shader equivalence still requires external visual QA.
+//! Functional gradient/period/wavelength parameters are summarized from
+//! the owner's GG 108.3 preset migrations. All rendering is performed by
+//! the independently designed compositor.rs. The original vendor aperture
+//! shader and opacity/mask semantics are NOT available or reproduced.
+use crate::compositor::{
+    Aperture, ApertureShape, BlendMode, Geometry, Graphic, Motion, Scene, Transform, BLACK,
+};
 use crate::effects::Config;
 use crate::Rgb;
 
-#[derive(Debug, Clone, Copy)]
-struct Motion {
-    period_ms: u32,
-    wave: i16,
-    geometry: u8,
-    stops: &'static [(u8,u32)],
-}
-#[derive(Debug, Clone, Copy)]
-struct Scene {
-    foreground: Motion,
-    background: Option<Motion>,
-    aperture: Option<Motion>,
-}
-
-fn unpack(rgb: u32) -> Rgb {
-    Rgb { red: (rgb >> 16) as u8, green: (rgb >> 8) as u8, blue: rgb as u8 }
-}
-fn mix(a: Rgb, b: Rgb, alpha: f32) -> Rgb {
-    let w = alpha.clamp(0.0, 1.0);
-    let f = |x:u8,y:u8| (x as f32 * (1.0-w) + y as f32 * w).round() as u8;
-    Rgb { red:f(a.red,b.red), green:f(a.green,b.green), blue:f(a.blue,b.blue) }
-}
-fn palette(stops: &[(u8,u32)], position: f32) -> Rgb {
-    let Some(&(initial, color)) = stops.first() else {
-        return unpack(0);
-    };
-    if position <= initial as f32 { return unpack(color); }
-    for slice in stops.windows(2) {
-        let (a,from) = slice[0];
-        let (b,to) = slice[1];
-        if position <= b as f32 {
-            let width = (b-a).max(1) as f32;
-            return mix(unpack(from), unpack(to), (position-a as f32)/width);
-        }
+const fn radial(period_ms: u32, wave: i16) -> Motion {
+    Motion {
+        period_ms,
+        wavelength: wave,
+        geometry: Geometry::Radial,
+        transform: Transform::CENTERED,
     }
-    unpack(stops.last().unwrap().1)
 }
-fn phase(motion: Motion, x: f32, y: f32, seconds: f32, speed: f32) -> f32 {
-    let radial = ((x-0.5).powi(2) + (y-0.5).powi(2)).sqrt();
-    let spatial = match motion.geometry {
-        1 => radial * 1.5,
-        2 => y,
-        3 => x*0.55 + y*0.45,
-        _ => x + y*0.12,
-    };
-    let space = if motion.wave == 0 { 0.0 }
-        else {
-            let sign = if motion.wave < 0 { -1.0 } else { 1.0 };
-            sign * (64.0/f32::from(motion.wave.unsigned_abs())).clamp(0.1,20.0)*spatial
-        };
-    let clock = if motion.period_ms == 0 {0.0}
-        else { seconds.max(0.0)*speed*1000.0/motion.period_ms as f32 };
-    (space + clock).rem_euclid(1.0)
-}
-fn render(scene: Scene, x: f32, y: f32, t: f32, config: Config) -> Rgb {
-    let fore_phase = phase(scene.foreground,x,y,t,config.speed);
-    let foreground = palette(scene.foreground.stops,fore_phase*255.0);
-    let Some(aperture) = scene.aperture else {
-        return foreground;
-    };
-    // Original GG aperture data has *no gradient stops*. The independent
-    // sinusoidal coverage function below approximates a smooth spatial gate
-    // and must NOT be represented as the official aperture implementation.
-    let aperture_phase = phase(aperture,x,y,t,config.speed);
-    let coverage = 0.5 + 0.5*(aperture_phase*std::f32::consts::TAU).cos();
-    let background = scene.background
-        .map(|back| palette(back.stops,phase(back,x,y,t,config.speed)*255.0))
-        .unwrap_or(unpack(0));
-    mix(background,foreground,coverage)
+const fn horizontal(period_ms: u32, wave: i16) -> Motion {
+    Motion {
+        period_ms,
+        wavelength: wave,
+        geometry: Geometry::Horizontal,
+        transform: Transform::IDENTITY,
+    }
 }
 
-const WEST_COAST: Scene = Scene {
-    foreground: Motion {
-        period_ms:0,wave:-24,geometry:1,
-        stops:&[(0,0xff2000),(230,0xffaf00),(245,0x05b1ff),(255,0x05b1ff)],
-    },
-    background:Some(Motion {
-        period_ms:0,wave:-24,geometry:1,
-        stops:&[(0,0x3250ff),(230,0x00baff),(245,0xff2800),(255,0xff2800)],
-    }),
-    aperture:Some(Motion {period_ms:0,wave:-24,geometry:1,stops:&[]}),
-};
-const HAZE: Scene = Scene {
-    foreground: Motion {
-        period_ms:5000,wave:0,geometry:0,stops:&[(0,0xff00ff)],
-    },
-    background:Some(Motion {
-        period_ms:4000,wave:24,geometry:0,
-        stops:&[(0,0xff0000),(85,0x0000ff),(170,0x00ffff),(255,0xff0000)],
-    }),
-    aperture:Some(Motion {period_ms:9000,wave:96,geometry:1,stops:&[]}),
-};
-const WARP_DRIVE: Scene = Scene {
-    foreground: Motion {
-        period_ms:1200,wave:6,geometry:1,
-        stops:&[(0,0x000000),(38,0xffffff),(77,0xffffff),(255,0x000000)],
-    },
-    background:None,
-    aperture:Some(Motion {period_ms:1200,wave:6,geometry:1,stops:&[]}),
+/// Original GG source aperture fields have no RGB stops, so an independent
+/// smooth coverage function is used. This is expressly NOT an exact GG mask.
+const fn aperture(motion: Motion) -> Option<Aperture> {
+    Some(Aperture {
+        motion,
+        shape: ApertureShape::Cosine,
+        invert: false,
+    })
+}
+
+/// West Coast: two distinct static source gradients plus a radial mask.
+const WEST_COAST: Scene<'static> = Scene {
+    clear: BLACK,
+    layers: &[
+        Graphic {
+            stops: &[(0, 0x3250ff), (230, 0x00baff), (245, 0xff2800), (255, 0xff2800)],
+            motion: radial(0, -24),
+            opacity: 1.0,
+            blend: BlendMode::Normal,
+            aperture: None,
+        },
+        Graphic {
+            stops: &[(0, 0xff2000), (230, 0xffaf00), (245, 0x05b1ff), (255, 0x05b1ff)],
+            motion: radial(0, -24),
+            opacity: 1.0,
+            blend: BlendMode::Normal,
+            aperture: aperture(radial(0, -24)),
+        },
+    ],
 };
 
-/// Try a specialized multi-graphic scene; return None for presets rendered
-/// by the factory gradient pipeline.
-pub fn special_scene(id: &str, x: f32, y: f32, seconds: f32, config: Config) -> Option<Rgb> {
+/// Haze: a time-varying rainbow-like background, a single magenta foreground,
+/// and a separate slow spatial aperture.
+const HAZE: Scene<'static> = Scene {
+    clear: BLACK,
+    layers: &[
+        Graphic {
+            stops: &[(0, 0xff0000), (85, 0x0000ff), (170, 0x00ffff), (255, 0xff0000)],
+            motion: horizontal(4000, 24),
+            opacity: 1.0,
+            blend: BlendMode::Normal,
+            aperture: None,
+        },
+        Graphic {
+            stops: &[(0, 0xff00ff)],
+            motion: horizontal(5000, 0),
+            opacity: 1.0,
+            blend: BlendMode::Normal,
+            aperture: aperture(radial(9000, 96)),
+        },
+    ],
+};
+
+/// Warp Drive: radial foreground with an aperture against dark background.
+const WARP_DRIVE: Scene<'static> = Scene {
+    clear: BLACK,
+    layers: &[Graphic {
+        stops: &[(0, 0x000000), (38, 0xffffff), (77, 0xffffff), (255, 0x000000)],
+        motion: radial(1200, 6),
+        opacity: 1.0,
+        blend: BlendMode::Normal,
+        aperture: aperture(radial(1200, 6)),
+    }],
+};
+
+/// Specialized historic graphics scenes, with the rest falling through to
+/// the factory palette pipeline. No USB or physical keypress access.
+pub fn special_scene(
+    id: &str,
+    x: f32,
+    y: f32,
+    seconds: f32,
+    config: Config,
+) -> Option<Rgb> {
     let scene = match id {
         "westCoast" => WEST_COAST,
         "haze" => HAZE,
         "warpDrive" => WARP_DRIVE,
         _ => return None,
     };
-    Some(render(scene,x,y,seconds,config))
+    Some(scene.sample(x, y, seconds, config.speed))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{effects,encode_direct_write};
+    use crate::{effects, encode_direct_write};
+
     #[test]
-    fn source_multigraphic_scenes_are_spatially_distinct() {
-        let config=Config {brightness:1.0,..Config::default()};
-        for name in ["westCoast","haze","warpDrive"] {
-            let mode=effects::Preset::from_name(&format!("gg:{name}")).unwrap();
-            let frame=effects::frame(mode,config,0.125,&[]);
-            assert_eq!(frame.len(),68);
-            assert_eq!(encode_direct_write(&frame).unwrap()[2],68);
-            let different=frame.iter().any(|key| key.rgb!=frame[0].rgb);
-            assert!(different, "scene {name} should not collapse to one static RGB value");
+    fn all_three_compound_presets_remain_full_68_key_frames() {
+        let settings = Config { brightness: 1.0, ..Config::default() };
+        for name in ["westCoast", "haze", "warpDrive"] {
+            let mode = effects::Preset::from_name(&format!("gg:{name}")).unwrap();
+            let frame = effects::frame(mode, settings, 0.125, &[]);
+            assert_eq!(frame.len(), 68);
+            assert_eq!(encode_direct_write(&frame).unwrap().len(), 513);
+            assert_eq!(encode_direct_write(&frame).unwrap()[2], 68);
+            assert!(frame.iter().any(|key| key.rgb != frame[0].rgb));
         }
     }
     #[test]
-    fn haze_uses_both_temporal_layers_and_aperture() {
-        let c=Config {brightness:1.0,..Config::default()};
-        let a=special_scene("haze",0.4,0.3,0.1,c).unwrap();
-        let b=special_scene("haze",0.4,0.3,1.4,c).unwrap();
-        assert_ne!(a,b);
+    fn haze_foreground_background_and_aperture_are_independent_in_time() {
+        let config = Config { brightness: 1.0, ..Config::default() };
+        let a = special_scene("haze", 0.4, 0.3, 0.1, config).unwrap();
+        let b = special_scene("haze", 0.4, 0.3, 1.4, config).unwrap();
+        assert_ne!(a, b);
     }
     #[test]
-    fn unknown_scenes_use_factory_fallback() {
-        assert!(special_scene("aqua",0.0,0.0,0.0,Config::default()).is_none());
+    fn west_coast_has_two_ordered_graphics_layers() {
+        assert_eq!(WEST_COAST.layers.len(), 2);
+        assert!(WEST_COAST.layers[0].aperture.is_none());
+        assert!(WEST_COAST.layers[1].aperture.is_some());
+        assert_eq!(HAZE.layers.len(), 2);
+        assert_eq!(WARP_DRIVE.layers.len(), 1);
+    }
+    #[test]
+    fn unknown_preset_uses_existing_factory_fallback() {
+        assert!(special_scene("aqua", 0.0, 0.0, 0.0, Config::default()).is_none());
     }
 }
