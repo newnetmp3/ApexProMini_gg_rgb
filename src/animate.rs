@@ -1,10 +1,11 @@
 //! Runtime animation loop for the wired Apex Pro Mini. All writes require opt-in.
 //! Ripple and Reactive read *only* the verified USB keyboard's evdev device;
 //! no key strings, timestamps, or input events are persisted.
-use apex_pro_mini::effects::{self, Config, KeyHit, Preset, PRESET_NAMES};
+use apex_pro_mini::effects::{Config, KeyHit, Preset, PRESET_NAMES};
 use apex_pro_mini::{encode_clear_direct_write, encode_direct_write, rgb_from_hex};
 use apex_pro_mini::input::{self, InputMessage};
 use apex_pro_mini::profile::Profile;
+use apex_pro_mini::layers::Stack;
 use apex_pro_mini::Rgb;
 use std::collections::BTreeMap;
 use std::sync::mpsc::{RecvTimeoutError, TryRecvError};
@@ -43,6 +44,9 @@ struct Options {
     confirmed: bool,
     preview: bool,
     overrides: BTreeMap<u8, Rgb>,
+    idle: Option<Preset>,
+    reactive: Option<Preset>,
+    idle_after_seconds: f32,
 }
 
 fn parse_args(args: &[String]) -> Result<Options, String> {
@@ -62,6 +66,9 @@ fn parse_args(args: &[String]) -> Result<Options, String> {
         confirmed: false,
         preview,
         overrides: BTreeMap::new(),
+        idle: None,
+        reactive: None,
+        idle_after_seconds: 15.0,
     };
     let mut profile_file = None::<PathBuf>;
     let mut index = 2;
@@ -117,6 +124,9 @@ fn parse_args(args: &[String]) -> Result<Options, String> {
         options.config = stored.config;
         options.fps = stored.fps;
         options.overrides = stored.key_overrides;
+        options.idle = stored.idle;
+        options.reactive = stored.reactive;
+        options.idle_after_seconds = stored.idle_after_seconds;
     }
     if options.preview && options.confirmed {
         return Err("Preview is always read-only; omit --confirm-device-write".into());
@@ -133,7 +143,11 @@ fn parse_args(args: &[String]) -> Result<Options, String> {
 fn run_animation(options: Options) -> Result<(), String> {
     // Open evdev input BEFORE writing RGB so missing permissions cannot
     // strand the keyboard in direct lighting mode.
-    let (input_rx, mut active_readers) = if options.preset.needs_key_events() {
+    let stack = Stack {
+        base: options.preset, idle: options.idle, reactive: options.reactive,
+        idle_after_seconds: options.idle_after_seconds,
+    };
+    let (input_rx, mut active_readers) = if stack.needs_input() {
         let (rx, count) = input::start_readers(options.input.as_deref())?;
         (Some(rx), count)
     } else {
@@ -143,6 +157,7 @@ fn run_animation(options: Options) -> Result<(), String> {
     let file = open_guarded(&endpoint)?;
     let clock = Instant::now();
     let mut hits = Vec::<KeyHit>::new();
+    let mut last_key_at = 0.0_f32;
     let mut previous = None;
     let interval = Duration::from_secs_f64(1.0 / f64::from(options.fps));
     RUNNING.store(true, Ordering::Relaxed);
@@ -151,7 +166,7 @@ fn run_animation(options: Options) -> Result<(), String> {
         "Running {:?} on {:?} ({} fps, speed {:.2}). Ctrl+C restores onboard lighting.",
         options.preset, endpoint.device, options.fps, options.config.speed
     );
-    if options.preset.needs_key_events() {
+    if stack.needs_input() {
         println!("Monitoring {active_readers} verified Mini evdev reader(s); normal typing is not intercepted or logged.");
     }
 
@@ -164,6 +179,7 @@ fn run_animation(options: Options) -> Result<(), String> {
                 match receiver.try_recv() {
                     Ok(InputMessage::Press { hid }) => {
                         hits.push(KeyHit { hid, when: elapsed });
+                        last_key_at = elapsed;
                         if hits.len() > 32 {
                             hits.remove(0);
                         }
@@ -186,7 +202,7 @@ fn run_animation(options: Options) -> Result<(), String> {
             }
             hits.retain(|hit| elapsed - hit.when < 2.5);
         }
-        let mut colors = effects::frame(options.preset, options.config, elapsed, &hits);
+        let mut colors = stack.render(options.config, elapsed, last_key_at, &hits);
         for key in &mut colors {
             if let Some(rgb) = options.overrides.get(&key.hid) {
                 key.rgb = *rgb;
@@ -304,7 +320,10 @@ pub fn run_effect(args: &[String]) -> Result<(), String> {
     }
     let options = parse_args(args)?;
     if options.preview {
-        let mut colors = effects::frame(options.preset, options.config, 0.5, &[]);
+        let mut colors = Stack {
+            base: options.preset, idle: options.idle,
+            reactive: options.reactive, idle_after_seconds: options.idle_after_seconds
+        }.render(options.config, 0.5, 0.0, &[]);
         for key in &mut colors {
             if let Some(rgb) = options.overrides.get(&key.hid) {
                 key.rgb = *rgb;
