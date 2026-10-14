@@ -1,41 +1,64 @@
-# Apex Pro Mini protocol — observations vs open questions
+# Apex Pro Mini HID RGB protocol: verified static structure
 
-**Target:** wired SteelSeries Apex Pro Mini, USB VID/PID `1038:161e`.
+**Hardware:** wired SteelSeries Apex Pro Mini, VID/PID `1038:161e`.
 
-## Verified on owner's Linux hardware
+## Linux hardware evidence (owner's Arch workstation)
 
-| Property | Value |
-|---|---|
-| Device selection | Interface 1; HID usage page `0xffc0`, usage `0x01` |
-| HID Output report | ID 0; 65 bytes including report-ID byte |
-| HID Feature report | ID 0; 513 bytes including report-ID byte |
-| Writes through generic `ssgg` | 3/3 successful after transport patch; **no visible RGB effect** |
-| Example command attempted | Generic zoned RGB output begins `00 21 FF ...`; ignored/ineffective on Mini |
-| Report-ID bug | Earlier logs showed extra leading zero; fixed and retested |
-| APPLY deduplication | Previously skipped; fixed and retested |
+- USB HID control interface 1, usage page `0xffc0`, usage `0x01`.
+- Report ID `0x00`, **65-byte Output** and **513-byte Feature** reports (the leading byte is counted in each).
+- Earlier generic `ssgg` command `0x21` wrote without errors but **did not change lighting**.
+- The upstream `ssgg` transport double report-ID issue and skipped final APPLY were fixed and observed as transmitted; still no visible RGB effect. No permissions problems on the control interface.
+- Device node numbers such as `/dev/hidraw7` are temporary and must never be hardcoded.
 
-The active `hidraw` number is not stable and **must be rediscovered**.
+## Official macOS GG 108.3 descriptor analysis — independently implemented
 
-## Verified by static examination of provided GG installers
+Locally decrypted the owner's `apex_pro_mini.edevice`, `base_apex_2022_mini_layout_lighting.edevice`, and the newly extracted inherited `base_apex_2022_wired.edevice`. The latter defines the previously missing wire serializer:
 
-- GG Mini descriptor identifies wired PID `0x1038161e`, vendor control usage page `0xffc0`, feature report size **513**, and model firmware key table of **70 slots**, including 2 unused slots.
-- Mini lighting uses an inherited individually-lit keyboard framework and high-level Engine APIs named `direct_write` and `clear_direct_write`. This identifies an integration path, **not the byte-level HID report**.
-- Device-specific firmware/profile handling supports several versions of the onboard profile schema (3, 4, 5, 6); avoid attempting profile writes until formats are understood.
-- Current available firmware metadata notes `1.19.7`; this is **installer-supplied metadata**, not a live read of the user's device firmware.
+| Operation | Command | API transport | Exact report size |
+|---|---|---|---|
+| `direct_write` | `0x40` | `HIDFEATURE` | **513 bytes** |
+| `clear_direct_write` | `0x41` | `HIDIO` (Output) | **65 bytes** |
 
-## Open wire-protocol questions
+The `direct_write` byte layout is:
 
-1. Which concrete HID command byte and report type implement `direct_write` on wired Mini?
-2. Does the RGB payload go over 65-byte Output, 513-byte Feature, or both?
-3. What are the initialization, direct-mode selection, and clear/commit semantics?
-4. Are LEDs addressed by USB HID usage, firmware key index, or a fixed contiguous layout?
-5. What is the safe rate limit/frame size and does it vary with firmware?
-6. How are device profile changes reflected by Prism and onboard lighting?
+```text
+00 40 NN [HID R G B] * 68 ... zero padding to 513 bytes
+ |  |  |           |
+ ID CMD actual count (0..68); remaining declared slots unused
+```
 
-**Do not reuse** the `0x40` 645-byte direct feature packet documented for Apex Pro TKL (2023 PID `0x1628`) on the Mini; it cannot fit the Mini's advertised Feature report. A successful USB write is not device confirmation.
+**Fixed serialized field:** The official struct declares **68 key entries** for this exact Mini model, each represented by HID code and RGB components, with `NN` indicating how many entries contain meaningful colors. The 70 firmware key-index slots are a *different* internal mapping; two are zero/unused. USB HID key codes are not firmware slot numbers.
 
-## Reference implementation research
+For a single red `A` key, the expected report prefix is `00 40 01 04 FF 00 00`; remaining bytes are zero. The `clear_direct_write` Output prefix is `00 41` padded to 65 bytes. The independent Rust serialization logic and offline tests live in `src/lib.rs`. **No proprietary descriptor text or password is committed.**
 
-- Native Linux Rust project: https://github.com/Ven0m0/steelseriesgg-rs
-- Descriptor analysis tool: https://github.com/hurryman2212/steelpatcher
-- No decrypted SteelSeries descriptor text or decryption passphrase belongs in this public repository.
+**Important:** These frame definitions are **verified against vendor static specifications**, *not yet observed working on a physical keyboard*. No claim of live functionality should be made until the owner confirms it.
+
+## Safety and unanswered questions
+
+- The `apex-mini-rgb` binary performs only read-only discovery unless the exact `--confirm-device-write` flag is provided.
+- It checks `1038:161e`, vendor usage page `0xffc0`, and exact report sizes before opening a HID node for writing.
+- It has an opt-in **one-key RGB Feature** operation and a separate **clear-direct-mode Output** operation. No flashing, actuation, profile writes, or arbitrary HID commands.
+- Official GG may require initialization, profile state, an active Prism service, or a particular write order before a command becomes visible. Those interactions are not yet experimentally confirmed.
+- A successful `ioctl` or HID `write` does **not** prove the RGB effect appeared. Record physical keyboard behavior.
+
+## Manual opt-in smoke test after CI passes
+
+```bash
+cargo test
+cargo build --release
+./target/release/apex-mini-rgb
+./target/release/apex-mini-rgb --dry-run A ff0000
+./target/release/apex-mini-rgb --write-key A ff0000 --confirm-device-write
+# Inspect the actual A-key LED, then restore onboard lighting:
+./target/release/apex-mini-rgb --clear --confirm-device-write
+```
+
+Do not execute the optional device writes until the owner wants to try them. If a write fails, do not retry with `sudo` without checking the relevant hidraw node permissions.
+
+## Resources
+
+- `docs/RESEARCH.md`: installer provenance and static research, without proprietary files.
+- `docs/HANDOVER.md`: rolling milestone status.
+- `docs/ROADMAP.md`: completion criteria and upcoming work.
+- Upstream Rust: https://github.com/Ven0m0/steelseriesgg-rs
+- Encrypted descriptor research: https://github.com/hurryman2212/steelpatcher
