@@ -3,6 +3,7 @@
 //! Each panel shows the same 68-key Rust frame as the real Mini encoder.
 use apex_pro_mini::effects::{self, Config, KeyHit, Preset};
 use apex_pro_mini::factory;
+use apex_pro_mini::layout;
 use apex_pro_mini::{KeyColor, Rgb};
 use std::fmt::Write as _;
 use std::path::PathBuf;
@@ -91,13 +92,16 @@ pub fn build_svg() -> String {
     svg
 }
 fn render_keyboard(svg: &mut String, colors: &[KeyColor], ox: f32, oy: f32) {
-    let pitch_x = 15.0;
+    let pitch_x = 14.0;
     let pitch_y = 11.5;
     for key in colors {
-        let Some((x, y)) = effects::position(key.hid) else { continue };
-        let px = ox + x * 14.0 * pitch_x;
-        let py = oy + y * 4.0 * pitch_y;
-        let w = if key.hid == 44 { pitch_x * 2.2 } else { 12.6 };
+        let Some(pos) = layout::position(key.hid) else { continue };
+        // SVG reflects factory's width-aware physical center and wide-key
+        // shape; international firmware alternates may overlap by design.
+        let x_start = (pos.x * 15.0 - pos.width_units * 0.5).max(0.0);
+        let px = ox + x_start * pitch_x;
+        let py = oy + pos.y * 4.0 * pitch_y;
+        let w = pos.width_units * pitch_x - 1.4;
         let fill = rgb_hex(key.rgb);
         let _ = write!(svg,
             r##"<rect x="{px:.1}" y="{py:.1}" width="{w:.1}" height="9.5" rx="2.1" fill="{fill}" stroke="#c4d2e5" stroke-width=".4"><title>HID {} : {fill}</title></rect>"##,
@@ -161,6 +165,14 @@ mod tests {
         assert!(preview_time(single, 2) > preview_time(ripple, 2));
     }
 
+    #[test]
+    fn gallery_geometry_places_the_spacebar_near_center() {
+        let space = layout::position(44).unwrap();
+        assert!((0.4..0.6).contains(&space.x));
+        assert!(space.width_units > 5.0);
+        let preview = build_svg();
+        assert!(preview.contains("HID 44"));
+    }
     #[test]
     fn svg_escapes_user_content() {
         assert_eq!(esc("<test & hi>"), "&lt;test &amp; hi&gt;");
