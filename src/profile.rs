@@ -1,7 +1,8 @@
 //! Versioned, strict, dependency-free RGB effect profile shared by CLI, user
 //! daemon and desktop GUI. Only settings (never keystrokes) are stored.
 use crate::effects::{Config, Preset};
-use crate::{rgb_from_hex, Rgb};
+use crate::{rgb_from_hex, Rgb, ADDRESSABLE_HID_CODES};
+use std::collections::BTreeMap;
 use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
@@ -11,6 +12,7 @@ pub struct Profile {
     pub preset: Preset,
     pub config: Config,
     pub fps: u32,
+    pub key_overrides: BTreeMap<u8, Rgb>,
 }
 impl Default for Profile {
     fn default() -> Self {
@@ -18,6 +20,7 @@ impl Default for Profile {
             preset: Preset::Ripple,
             config: Config::default(),
             fps: 24,
+            key_overrides: BTreeMap::new(),
         }
     }
 }
@@ -27,6 +30,11 @@ pub fn color_hex(rgb: Rgb) -> String {
 
 impl Profile {
     pub fn validate(&self) -> Result<(), String> {
+        for &hid in self.key_overrides.keys() {
+            if !ADDRESSABLE_HID_CODES.contains(&hid) {
+                return Err(format!("Invalid keyboard key override: HID {hid}"));
+            }
+        }
         if !(5..=40).contains(&self.fps) {
             return Err("FPS must be between 5 and 40".into());
         }
@@ -62,6 +70,13 @@ impl Profile {
                 "speed" => result.config.speed = value.parse::<f32>().map_err(|_| "Invalid speed")?,
                 "brightness" => result.config.brightness = value.parse::<f32>().map_err(|_| "Invalid brightness")?,
                 "fps" => result.fps = value.parse::<u32>().map_err(|_| "Invalid frame rate")?,
+                key if key.starts_with("key.") => {
+                    let hid: u8 = key[4..].parse().map_err(|_| "Invalid HID key override number")?;
+                    if !ADDRESSABLE_HID_CODES.contains(&hid) {
+                        return Err(format!("Unknown keyboard HID usage {hid}"));
+                    }
+                    result.key_overrides.insert(hid, rgb_from_hex(value)?);
+                }
                 _ => return Err(format!("Unknown profile field {name}")),
             }
         }
@@ -72,7 +87,7 @@ impl Profile {
 
     pub fn encode(&self) -> Result<String, String> {
         self.validate()?;
-        Ok(format!(
+        let mut text = format!(
             "# Apex Pro Mini native RGB profile. No input history is saved.\nversion=1\neffect={}\ncolor={}\naccent={}\nspeed={:.3}\nbrightness={:.3}\nfps={}\n",
             self.preset.as_str(),
             color_hex(self.config.base),
@@ -80,7 +95,11 @@ impl Profile {
             self.config.speed,
             self.config.brightness,
             self.fps
-        ))
+        );
+        for (hid, color) in &self.key_overrides {
+            text.push_str(&format!("key.{hid}={}\n", color_hex(*color)));
+        }
+        Ok(text)
     }
 
     pub fn load(path: &Path) -> Result<Self, String> {
@@ -127,7 +146,15 @@ mod tests {
             assert_eq!(next.preset, p.preset);
             assert_eq!(next.fps, p.fps);
             assert_eq!(next.config.base, p.config.base);
+            assert_eq!(next.key_overrides, p.key_overrides);
         }
+    }
+    #[test]
+    fn per_key_color_override_roundtrip() {
+        let mut p = Profile::default();
+        p.key_overrides.insert(4, Rgb { red: 255, green: 20, blue: 5 });
+        let parsed = Profile::decode(&p.encode().unwrap()).unwrap();
+        assert_eq!(parsed.key_overrides.get(&4), p.key_overrides.get(&4));
     }
     #[test]
     fn reject_unknown_duplicate_and_unbounded_settings() {
@@ -137,5 +164,6 @@ mod tests {
         assert!(Profile::decode("version=1\nfps=24\nfps=5\n").is_err());
         assert!(Profile::decode("version=1\ncolor=xyz\n").is_err());
         assert!(Profile::decode("version=2\n").is_err());
+        assert!(Profile::decode("version=1\nkey.0=ffffff\n").is_err());
     }
 }
