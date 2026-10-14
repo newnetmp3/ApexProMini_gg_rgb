@@ -174,8 +174,8 @@ pub fn render(index: u8, hid: u8, x: f32, y: f32, seconds: f32, config: Config, 
         for hit in hits {
             let age = seconds - hit.when;
             if !(0.0..=2.5).contains(&age) { continue; }
-            if let Some((hx, hy)) = crate::effects::position(hit.hid) {
-                let dist = ((x - hx).powi(2) + (y - hy).powi(2)).sqrt();
+            if let Some(pos) = crate::layout::position(hit.hid) {
+                let dist = ((x - pos.x).powi(2) + (y - pos.y).powi(2)).sqrt();
                 heat += (-dist * 20.0).exp() * (1.0 - age / 2.5);
             }
         }
