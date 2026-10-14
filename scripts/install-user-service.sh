@@ -10,7 +10,13 @@ if [[ ! -e "$HOME/.config/apex-mini-rgb/profile.conf" ]]; then
     install -m 0600 config/default.profile "$HOME/.config/apex-mini-rgb/profile.conf"
     echo "Created default profile; existing user profiles are never overwritten."
 fi
-install -m 0755 target/release/apex-mini-rgb "$HOME/.local/bin/apex-mini-rgb"
+# Atomic replacement is essential: the service may already be executing the
+# old binary. Overwriting its inode directly would fail with "Text file busy".
+stage="$(mktemp "$HOME/.local/bin/.apex-mini-rgb.XXXXXXXX")"
+trap 'rm -f -- "$stage"' EXIT
+install -m 0755 target/release/apex-mini-rgb "$stage"
+mv -f -- "$stage" "$HOME/.local/bin/apex-mini-rgb"
+trap - EXIT
 install -m 0644 systemd/user/apex-mini-ripple.service "$HOME/.config/systemd/user/apex-mini-ripple.service"
 systemctl --user daemon-reload
 printf '%s\n' "Installed Apex Mini RGB binary, saved profile, and user service (NOT automatically enabled or started)." \
