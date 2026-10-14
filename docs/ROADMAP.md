@@ -1,28 +1,29 @@
 # Apex Pro Mini native Linux roadmap
 
-Status as of **2026-10-14**. Completion indicates reproducible evidence, not planned functionality.
+Status as of **2026-10-14**. Completion means stated acceptance criteria have actually been met.
 
-| Milestone | Status | Acceptance criterion |
+| Milestone | State | Verification |
 |---|---|---|
-| 0. Establish repository, research provenance, documentation, tests | **Complete — PR #1** | Merged to `main` at `5364b999`; GitHub Actions Python tests passed |
-| 1. Identify hardware endpoints and report sizes | **Verified** | Owner's Linux HID descriptor shows `0xFFC0`, Output 65, Feature 513 |
-| 2. Fix generic HID transport in upstream checkout | **Verified by logs** | Correct framing and actual APPLY sent; not yet merged upstream |
-| 3. Recover and inspect official Mini device definitions | **Verified locally** | Password extracted locally; two exact Mini descriptors decrypt successfully |
-| 4. Identify exact RGB command serialization | **Not started** | Capture and independently reproduce actual `direct_write` HID payload bytes |
-| 5. Implement isolated Rust Mini codec | **Not started** | Static packet golden tests, strictly bounded report sizes |
-| 6. Verify Mini static RGB and per-key selection | **Blocked on milestone 4** | Real hardware responds correctly, three colors and sample keys |
-| 7. Add effects, zones, and Prism profiles | **Not started** | Saved/loaded profiles, static, gradient, idle and reactive states |
-| 8. Add safe read-only device state and firmware reporting | **Not started** | Status readback without modifying profiles |
-| 9. Add actuation / Rapid Trigger / remapping | **Not started** | Each command independently verified, rollback path and safe tests |
-| 10. Package and integrate Linux application | **Not started** | Native install/service, udev access, architecture and CI tests |
+| 0. Project structure, rolling handover, CI | **Complete — PR #1** | Merged to main; Python CI green |
+| 1. Identify hardware endpoints/report sizes | **Hardware verified** | Control `0xffc0`; 65-byte Output, 513-byte Feature |
+| 2. Correct generic `ssgg` report transport | **Verified by owner logs** | Extra report-ID removed; APPLY actually sent; no LED effect |
+| 3. Decrypt and inspect official Mini descriptors | **Verified locally** | Engine password extractor worked; four Mini/inherited definitions inspected |
+| 4. Establish Mini-specific RGB serializer | **Static specification verified** | New inherited `base_apex_2022_wired` confirms `0x40` Feature, `0x41` Output and field layouts |
+| 5. Implement independent Rust Mini codec | **Implemented on branch; CI verification pending** | Bounded report builders, golden-byte unit tests, guarded device detection |
+| 6. Verify real Mini static RGB/per-key selection | **Pending owner's hardware test** | Light the A key, clear direct mode, repeat for additional keys/colors |
+| 7. Lighting effects and Prism profiles | Not started | Working static/animated/idle/reactive effects and profile persistence |
+| 8. Read-only device state/firmware status | Not started | Real readback without altering settings |
+| 9. Actuation/Rapid Trigger/remapping | Not started | Independently verified commands and rollback |
+| 10. Package Linux service/application | Not started | Native installation, permissions, regressions and CI |
 
-**Out of scope for initial RGB milestone:** Sonar audio, Moments recording, firmware flashing, unsupported devices, publishing vendor binaries or recovered descriptor secrets.
+The protocol structure is recovered and now testable; **successful writes are not equivalent to visible RGB response**.
 
 ## Engineering quality gates
 
-- Keep read-only detection separated from opt-in write paths.
-- Accept only `1038:161e`, validate the `0xFFC0` HID collection and report sizes on every access.
-- No guessed device commands, no report truncation, no accidental writes to input-only interfaces.
-- Run unit tests and, when a Rust project is introduced, `cargo fmt --check`, `cargo test` and `cargo clippy`.
-- Label hardware-observed results distinctly from static vendor documentation and speculative hypotheses.
-- Update `docs/HANDOVER.md` and this roadmap with every meaningful milestone.
+- Default commands must be read-only; HID writes require explicit owner opt-in.
+- Match VID/PID, usage page and both report lengths before writing.
+- Never truncate packets, silently pick a HID interface, or accept arbitrary firmware/actuation commands.
+- No proprietary GG binaries, descriptors, plaintext, or recovered passphrase in the public repo.
+- Run `cargo test --all-targets`, `cargo clippy` and Python unit tests in CI. Add `cargo fmt --check` after format conformance.
+- Hardware success needs the owner's observation; don't mark it done based on HID API return codes.
+- Update `docs/HANDOVER.md` and this roadmap alongside every meaningful change.
