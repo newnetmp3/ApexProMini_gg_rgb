@@ -18,6 +18,8 @@ pub enum Preset {
     PrismaticSweep,
     Heatmap,
     ReactiveLine,
+    /// Parameter-derived GG Prism preset; not a certified visual match.
+    Factory(u8),
 }
 impl Preset {
     pub fn as_str(self) -> &'static str {
@@ -28,6 +30,7 @@ impl Preset {
             Self::Comet => "comet", Self::RainbowSplit => "rainbow-split",
             Self::PrismaticSweep => "prismatic-sweep", Self::Heatmap => "heatmap",
             Self::ReactiveLine => "reactive-line",
+            Self::Factory(index) => crate::factory::by_index(index).map(|spec| spec.cli).unwrap_or("gg:invalid"),
         }
     }
     pub fn from_name(s: &str) -> Option<Self> {
@@ -46,11 +49,15 @@ impl Preset {
             "prismatic-sweep" => Some(Self::PrismaticSweep),
             "heatmap" => Some(Self::Heatmap),
             "reactive-line" => Some(Self::ReactiveLine),
-            _ => None,
+            other => crate::factory::find(other).map(Self::Factory),
         }
     }
     pub fn needs_key_events(self) -> bool {
-        matches!(self, Self::Ripple | Self::Reactive | Self::Heatmap | Self::ReactiveLine)
+        match self {
+            Self::Ripple | Self::Reactive | Self::Heatmap | Self::ReactiveLine => true,
+            Self::Factory(index) => crate::factory::is_reactive(index),
+            _ => false,
+        }
     }
 }
 
@@ -143,6 +150,7 @@ pub fn frame(preset: Preset, settings: Config, seconds: f32, hits: &[KeyHit]) ->
     ADDRESSABLE_HID_CODES.iter().copied().map(|hid| {
         let (x, y) = coords(hid);
         let rgb = match preset {
+            Preset::Factory(index) => crate::factory::render(index, hid, x, y, seconds, settings, hits),
             Preset::Solid => settings.base,
             Preset::Breathing => dim(settings.base, 0.07 + 0.93 * (0.5 + 0.5 * (t * 3.2).sin())),
             Preset::Rainbow => hue(x * 0.9 + y * 0.13 + t * 0.11),
