@@ -62,6 +62,21 @@ Important: `--effect` and `--preview-effect` are different. Preview does not ope
 
 The new renderer uses approximate key geometry including international layouts. Per-key ripple positioning needs keyboard-side confirmation; the input reader never writes files, grabs keys, or records typed strings. `Ctrl+C` or `SIGTERM` attempts `0x41` clear to restore onboard lighting; a crash or hard kill cannot guarantee restoration.
 
+## Repair a confirmed `/dev/input/eventN` permission denial
+
+The Mini's HID RGB interface can be writable while the evdev input interfaces deny reading keypresses. The owner observed `/dev/input/event11` and `event12` with **Permission denied (os error 13)**. This blocks ripple even when whole-board solid lighting works.
+
+To explicitly install a narrowly scoped active-seat ACL without opening unrelated keyboards:
+
+```bash
+bash scripts/install-input-permissions.sh
+# Unplug/replug the wired Mini, then rediscover nodes.
+./target/release/apex-mini-rgb --list-inputs
+./target/release/apex-mini-rgb --test-input --seconds 10
+```
+
+The script uses `sudo` solely to install one `71-` udev rule that adds `uaccess` to keyboard event nodes from USB `1038:161e`. It **does not** add you to the `input` group, run the daemon as root, or enable the service. See [`docs/SERVICE.md`](SERVICE.md) for permission checks, removal instructions, and security considerations.
+
 ## 4. Diagnose physical keypresses before running ripple
 
 The owner **verified full-keyboard solid blue** but did **not** see a ripple on keypress. Use the new independent, **read-only** input test to distinguish input delivery from effect rendering:
