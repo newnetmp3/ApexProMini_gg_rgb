@@ -198,6 +198,9 @@ pub fn render(index: u8, hid: u8, x: f32, y: f32, seconds: f32, config: Config, 
         return mix(config.base, sample(spec.stops, 0.0), strength);
     }
 
+    if let Some(composed) = crate::graphics::special_scene(spec.id, x, y, seconds, config) {
+        return composed;
+    }
     let variant = crate::regions::select(spec.id, x, y);
     let geometry = variant.map(|v| v.geometry).unwrap_or(spec.geometry);
     let wavelength = variant.map(|v| v.wavelength).unwrap_or(spec.wavelength);
