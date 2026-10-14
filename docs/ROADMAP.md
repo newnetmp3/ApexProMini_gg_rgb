@@ -54,7 +54,7 @@ Full port remains a separate roadmap: load actual GG preset configurations and m
 
 Added a reusable `base + idle + reactive` pure lighting compositor, compatible with existing version-1 profiles; when no layer is configured, prior confirmed native ripple rendering remains unchanged.
 
-**Still blocking strict parity:** **36 additional multi-region masks now implemented but coordinate alignment unverified**, GG foreground/background/aperture/alpha graph behavior, device-specific geometry, 121-version profile catalogue differences, true actuation heatmap and side-by-side real-hardware confirmation. Full details and next-test matrix: [`docs/FACTORY_PRESETS.md`](FACTORY_PRESETS.md).
+**Still blocking strict parity:** **36 additional multi-region masks now implemented but coordinate alignment unverified**, GG foreground/background/aperture/alpha graph behavior, device-specific geometry, 121-version profile catalogue differences, **five heatmap analog threshold bands mapped offline but missing verified live analog data**, and side-by-side real-hardware confirmation. Full details and next-test matrix: [`docs/FACTORY_PRESETS.md`](FACTORY_PRESETS.md).
 
 ## Comprehensive GG preset parity (long-term requirement)
 
