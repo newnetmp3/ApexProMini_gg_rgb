@@ -15,6 +15,13 @@ pub enum Preset {
     Sparkle,
 }
 impl Preset {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Solid => "solid", Self::Breathing => "breathing", Self::Rainbow => "rainbow",
+            Self::Wave => "wave", Self::ColorShift => "color-shift", Self::Gradient => "gradient",
+            Self::Ripple => "ripple", Self::Reactive => "reactive", Self::Sparkle => "sparkle",
+        }
+    }
     pub fn from_name(s: &str) -> Option<Self> {
         match s.to_ascii_lowercase().as_str() {
             "solid" => Some(Self::Solid),
