@@ -7,7 +7,6 @@
 //! The real vendor's exact LED coordinates / ANSI/ISO choices still need
 //! visual validation on owner hardware. The *owner-confirmed native ripple*
 //! intentionally continues to use effects::position without changing it.
-use crate::ADDRESSABLE_HID_CODES;
 
 /// Position of an addressable RGB usage, in the normalized five-row board.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -106,6 +105,7 @@ pub fn source_grid(hid: u8) -> Option<(u8, u8)> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ADDRESSABLE_HID_CODES;
     use std::collections::HashSet;
 
     #[test]
@@ -132,7 +132,7 @@ mod tests {
             assert!(pos.width_units > 0.0);
             let (source_row, col) = source_grid(hid).unwrap();
             assert_eq!(source_row, pos.row + 1);
-            assert!(source_row >= 1 && source_row <= 5 && col <= 21);
+            assert!((1..=5).contains(&source_row) && col <= 21);
         }
         assert!(position(0).is_none());
     }
