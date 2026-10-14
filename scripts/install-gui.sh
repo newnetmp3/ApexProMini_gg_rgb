@@ -9,7 +9,11 @@ cd "$root"
 bash scripts/install-user-service.sh
 cargo build --release --features gui --bin apex-mini-gui
 mkdir -p "$HOME/.local/bin" "$HOME/.local/share/applications"
-install -m 0755 target/release/apex-mini-gui "$HOME/.local/bin/apex-mini-gui"
+stage="$(mktemp "$HOME/.local/bin/.apex-mini-gui.XXXXXXXX")"
+trap 'rm -f -- "$stage"' EXIT
+install -m 0755 target/release/apex-mini-gui "$stage"
+mv -f -- "$stage" "$HOME/.local/bin/apex-mini-gui"
+trap - EXIT
 desktop="$HOME/.local/share/applications/apex-mini-prism.desktop"
 cat > "$desktop" <<EOF
 [Desktop Entry]
