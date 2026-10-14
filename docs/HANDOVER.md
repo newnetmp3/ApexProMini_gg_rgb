@@ -27,7 +27,7 @@
 - `src/effects.rs`: native full-board frame rendering for solid, gradient, rainbow, wave, breathing, color-shift, sparkle, ripple and reactive.
 - `src/input.rs`: non-grabbing Linux evdev, scoped to the wired Mini, only in-memory keydown codes.
 - `src/animate.rs`: bounded-rate animation and Ctrl+C/SIGTERM restore, opt-in write and explicit USB-input selection.
-- `docs/PRESET_COVERAGE.md`: coverage matrix and plan to inventory *every* actual GG Prism preset.
+- `docs/PRESET_COVERAGE.md`: nine provisional native effects plus **31 official GG 108.3 Prism preset identifiers** extracted from bundled database migration SQL. The identifiers are not necessarily 31 simultaneously available user-facing presets; every match still needs GG parameter/visual validation.
 - `Cargo.toml`, `.github/workflows/rust.yml`: zero-external-dependency Rust build/tests/Clippy.
 - `tools/hid_probe.py` + `tests/test_hid_probe.py`: original read-only Python probe.
 - `tools/decrypt_descriptor_local.py`: private-only wrapper around independent steelpatcher parser.
