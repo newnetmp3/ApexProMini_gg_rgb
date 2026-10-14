@@ -143,6 +143,23 @@ mod tests {
         assert_eq!(WARP_DRIVE.layers.len(), 1);
     }
     #[test]
+    fn west_coast_center_is_the_opaque_foreground_color() {
+        // At its radial origin the independently modeled cosine aperture is
+        // fully open. This is a stable numerical fixture for refactors, NOT
+        // a visual claim about the vendor's original mask shader.
+        let settings = Config { brightness: 1.0, ..Config::default() };
+        assert_eq!(special_scene("westCoast", 0.5, 0.5, 0.0, settings),
+            Some(Rgb { red: 255, green: 32, blue: 0 }));
+    }
+    #[test]
+    fn haze_aperture_can_fully_open_and_close_at_center() {
+        let settings = Config { brightness: 1.0, ..Config::default() };
+        let open = special_scene("haze", 0.5, 0.5, 0.0, settings).unwrap();
+        let closed = special_scene("haze", 0.5, 0.5, 4.5, settings).unwrap();
+        assert_eq!(open, Rgb { red: 255, green: 0, blue: 255 });
+        assert_ne!(closed, open);
+    }
+    #[test]
     fn unknown_preset_uses_existing_factory_fallback() {
         assert!(special_scene("aqua", 0.0, 0.0, 0.0, Config::default()).is_none());
     }
