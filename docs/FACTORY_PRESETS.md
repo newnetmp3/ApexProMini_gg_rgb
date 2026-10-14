@@ -48,7 +48,7 @@ reactive=gg:reactiveRipple
 | Data-driven sampled gradients, color cycles and simple reactive patterns | **Independent approximations** |
 | Base + idle + reactive composition, existing profile compatibility | **Implemented and software-tested** |
 | Multiple vendor variants / region masks | **36 additional mask/palette variants implemented across eight presets**; current Mini row/column alignment approximate and needs visual QA |
-| Vendor compositor: foreground/background graphics, apertures, blending, repetition and origin transforms | **Independent two-layer/coverage compositor added for 3 scenes**; exact GG shader math, opacity, repeated graphics, transforms still unverified |
+| Vendor compositor: foreground/background graphics, apertures, blending, repetition and origin transforms | **Reusable independent compositor implemented**: ordered layers, opacity, four blend modes, scaled/rotated/origin-based motion, repeated phase and cosine/band masks. Three complex scenes connected. Vendor shader equations and actual per-preset settings **not verified** |
 | Per-key physical RGB coordinate/layout fidelity | **Requires device-side QA** |
 | User's existing standalone ripple / service | **Previously confirmed working**; no altered HID transport |
 | Full parity to SteelSeries GG Prism default presets | **Not achieved** |
@@ -98,6 +98,12 @@ The official source material for `westCoast` and `haze` contains both foreground
 The new independent `src/graphics.rs` interprets those functional fields with a pure layer compositor. It calculates each foreground/background phase from source-derived duration, wavelength and phase geometry; a bounded time/space mask blends the layers, defaulting to black where no background exists. Pure unit tests verify multiple colors over the keyboard, time variation and full 68-key feature frame compatibility. `prism-preview` uses the updated frames without any GUI or hardware access.
 
 **Fidelity limitation:** Original GG aperture shaders, anchor transforms, opacity and blending are not specified by the configuration alone. The current bounded cosine aperture is a **functional approximation**, not proof of parity. No proprietary graphics shader source is copied or executed.
+
+## Reusable compositor foundation (new independent implementation)
+
+`src/compositor.rs` now supports explicitly ordered background-to-foreground RGB graphics, per-layer opacity, Normal/Add/Multiply/Screen blend modes, independent phase and gradient palettes, scale/rotation/origin transforms, repetition and offsets, and cosine/feathered-band inverted masks. `src/graphics.rs` now describes West Coast, Haze and Warp Drive as declarative scene stacks. Unit tests verify blend endpoints, layer order, transform changes and periodic masks. A small set of numeric RGB fixtures prevents silent changes to our **approximate** compositor.
+
+See [`docs/COMPOSITOR.md`](COMPOSITOR.md) for algorithm documentation and exact remaining acceptance criteria. **These controls are independently defined; they do not mean the historical GG shader code, layer metadata, opacity settings, or physical key layout has been reproduced correctly.**
 
 ## Safe operation
 
