@@ -2,7 +2,7 @@
 
 **Updated:** 2026-10-14  
 **Repository:** https://github.com/newnetmp3/ApexProMini_gg_rgb  
-**Working branch:** `feature/mini-official-rgb-codec` (PR pending). Latest merged work: PR #1, main SHA `67a67146b4cb`.  
+**Latest merged work:** PR [#2](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/2), squash commit `2ccb9f67d63ddbd15b7dcc326dbefde505c0386d`, merged into `main` after Rust tests/Clippy and Python tests passed on the feature branch. Recheck main CI before the next milestone.  
 **Hardware:** Wired SteelSeries Apex Pro Mini `1038:161e`; owner runs Arch Linux, KDE Wayland.
 
 ## Verified milestones
@@ -34,11 +34,16 @@
 
 ## Immediate next work
 
-1. Verify Rust CI builds, unit tests and Clippy, and resolve failures before merge. Formatting check desirable.
-2. Merge feature PR after green CI. Update both rolling docs to final PR/SHA status.
-3. Have owner clone/pull and run **read-only** `cargo run --` then `cargo run -- --dry-run A ff0000`.
-4. With owner's agreement, test `cargo run --release -- --write-key A ff0000 --confirm-device-write` and immediately `cargo run --release -- --clear --confirm-device-write`, reporting visible changes (not just USB success).
-5. If real RGB works, expand to multiple keys/colors, then improve integration into `steelseriesgg-rs`. If no visible change, investigate GG session initialization/capture and firmware state; never fuzz random commands.
+1. PR #2 merged with Rust test + Clippy and Python test success on its branch. Check final `main` workflow status and follow-up formatting compliance.
+2. Have owner clone/pull and run read-only `cargo run --` and `cargo run -- --dry-run A ff0000`.
+3. With owner's explicit agreement, test `cargo run --release -- --write-key A ff0000 --confirm-device-write` and then `cargo run --release -- --clear --confirm-device-write`, reporting observed LED changes separately from successful USB submission.
+4. If RGB works, expand to additional keys/colors and integrate the Mini driver into `steelseriesgg-rs`. If not, investigate GG session initialization/capture and firmware state; never fuzz random commands.
+5. Continue with profile effects only after milestone 6 is observed on hardware.
+
+## Completed PR and CI history
+
+- **2026-10-14 PR #1:** Repository, initial handover, Python read-only HID probe and CI.
+- **2026-10-14 PR #2:** Official Mini wired `0x40` direct RGB and `0x41` clear serialization, guarded independent Rust CLI, unit tests, Rust CI and updated setup/research. Branch tests and Clippy passed; hardware response remains **unverified**. Squash SHA `2ccb9f67d63d`.
 
 ## Rolling documentation convention
 
