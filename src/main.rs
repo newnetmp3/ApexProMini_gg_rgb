@@ -1,3 +1,6 @@
+#[cfg(target_os = "linux")]
+mod animate;
+
 //! Read-only by default. Explicit confirmation is required for all HID writes.
 //! Only supports wired SteelSeries Apex Pro Mini USB 1038:161e.
 use apex_pro_mini::{
@@ -103,7 +106,7 @@ unsafe extern "C" {
 }
 
 #[cfg(target_os = "linux")]
-fn send_feature(file: &File, mut data: [u8; FEATURE_REPORT_BYTES]) -> Result<(), String> {
+fn send_feature(file: &File, mut data: [u8; FEATURE_REPORT_BYTES], verbose: bool) -> Result<(), String> {
     use std::os::fd::AsRawFd;
     // Kernel HIDIOCSFEATURE(len) = _IOWR('H', 0x06, len).
     // Data[0] is report ID 0; this call is for the *feature* report, not write(2).
@@ -115,12 +118,14 @@ fn send_feature(file: &File, mut data: [u8; FEATURE_REPORT_BYTES]) -> Result<(),
     if rc < 0 {
         return Err(format!("HIDIOCSFEATURE failed: {}", io::Error::last_os_error()));
     }
-    println!("Feature report write submitted (kernel return {rc}); verify visible effect on hardware.");
+    if verbose {
+        println!("Feature report write submitted (kernel return {rc}); verify visible effect on hardware.");
+    }
     Ok(())
 }
 
 #[cfg(not(target_os = "linux"))]
-fn send_feature(_file: &File, _data: [u8; FEATURE_REPORT_BYTES]) -> Result<(), String> {
+fn send_feature(_file: &File, _data: [u8; FEATURE_REPORT_BYTES], _verbose: bool) -> Result<(), String> {
     Err("Live HID writes require Linux".into())
 }
 
@@ -134,6 +139,10 @@ fn send_output(mut file: File, data: [u8; OUTPUT_REPORT_BYTES]) -> Result<(), St
 }
 
 fn run(args: &[String]) -> Result<(), String> {
+    #[cfg(target_os = "linux")]
+    if args.first().is_some_and(|arg| matches!(arg.as_str(), "--list-inputs" | "--effect" | "--preview-effect")) {
+        return animate::run_effect(args);
+    }
     match args {
         [] => {
             let endpoint = discover_control()?;
@@ -161,7 +170,7 @@ fn run(args: &[String]) -> Result<(), String> {
                 "WARNING: Experimental static RGB feature report to {:?}, HID {hid}. This can change lighting until you --clear.",
                 endpoint.device
             );
-            send_feature(&file, report)
+            send_feature(&file, report, true)
         }
         [clear, confirm] if clear == "--clear" && confirm == "--confirm-device-write" => {
             let endpoint = discover_control()?;
