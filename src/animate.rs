@@ -2,7 +2,7 @@
 //! Ripple and Reactive read *only* the verified USB keyboard's evdev device;
 //! no key strings, timestamps, or input events are persisted.
 use apex_pro_mini::effects::{self, Config, KeyHit, Preset, PRESET_NAMES};
-use apex_pro_mini::{encode_clear_direct_write, encode_direct_write, rgb_from_hex, Rgb};
+use apex_pro_mini::{encode_clear_direct_write, encode_direct_write, rgb_from_hex};
 use apex_pro_mini::input;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
