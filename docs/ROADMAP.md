@@ -10,7 +10,7 @@ Status as of **2026-10-14**. Completion means stated acceptance criteria have ac
 | 3. Decrypt and inspect official Mini descriptors | **Verified locally** | Engine password extractor worked; four Mini/inherited definitions inspected |
 | 4. Establish Mini-specific RGB serializer | **Static specification verified** | New inherited `base_apex_2022_wired` confirms `0x40` Feature, `0x41` Output and field layouts |
 | 5. Implement independent Rust Mini codec | **Complete — PR #2** | Squash SHA `2ccb9f67d63d`; bounded frame builders, golden-byte unit tests, guarded device selection, Rust tests and Clippy green on branch |
-| 6. Verify real Mini static RGB/per-key selection | **In progress: A key hardware-verified** | Owner observed A key turn red using `0x40` Feature report. Next: verify `0x41` clear, other keys/colors, and simultaneous multi-key control |
+| 6. Verify real Mini static RGB/per-key selection | **In progress — A key verified; PR #3** | Owner observed A key turn red using `0x40` Feature report. Next: verify `0x41` clear, other keys/colors, and simultaneous multi-key control |
 | 7. Lighting effects and Prism profiles | Not started | Working static/animated/idle/reactive effects and profile persistence |
 | 8. Read-only device state/firmware status | Not started | Real readback without altering settings |
 | 9. Actuation/Rapid Trigger/remapping | Not started | Independently verified commands and rollback |
