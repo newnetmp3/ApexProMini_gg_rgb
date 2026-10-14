@@ -29,6 +29,50 @@ These are **our provisional descriptive effect names**, not assertions about GG'
 
 The approximate US-60% spatial layout presently used for position-dependent effects covers all 68 logical HID entries (including international variants). Accurate physical coordinates, legends, and region layouts still need visual validation.
 
+## Official GG 108.3.0 Prism preset identifier inventory (31)
+
+**Source:** owner's locally inspected `SteelSeriesGG108.3.0.pkg` → PrismSyncV2 package → bundled Prism database migration SQL. This table reports **31 distinct `name_locale_key` identifiers referenced by the bundled migrations**, not necessarily 31 presets simultaneously available in the UI. Presets can be version-dependent, deleted, hidden, or special-case defaults. The exact visibility and per-device compatibility still require inspecting GG's current database and UI. The public repo contains **only identifiers and metadata**, not proprietary preset JSON.
+
+| Official preset identifier suffix | Catalog mode | Native coverage |
+|---|---|---|
+| aqua | Base / idle | Not matched |
+| chasingGhosts | Base / idle | Not matched |
+| clown | Base / idle | Not matched |
+| colorFusion | Base / idle | Not matched |
+| comet | Base / idle | Not matched |
+| disabled | Base / idle | Not matched |
+| discoMode | Base / idle; bitmap flag | Not matched |
+| drain | Base / idle | Not matched |
+| faze | Base / idle | Not matched |
+| freeway | Base / idle | Not matched |
+| haze | Base / idle | Not matched |
+| heatmap | Base / idle | Not matched |
+| pride | Base / idle | Not matched |
+| prism | Base / idle | Not matched |
+| radioactive | Base / idle | Not matched |
+| rainbow | Base / idle; bitmap flag | Generic rainbow prototype only; **not a parity match** |
+| rainbowSplit | Base / idle | Not matched |
+| reactiveLine | Reactive | Not matched |
+| reactiveRipple | Reactive | Generic ripple prototype only; **not a parity match** |
+| reactiveSingleKey | Reactive | Generic reactive prototype only; **not a parity match** |
+| redPulse | Needs version-specific inspection | Not matched |
+| selfDestruct | Base / idle | Not matched |
+| shavedIce | Base / idle | Not matched |
+| solar | Base / idle | Not matched |
+| staticFade | Base / idle | Not matched |
+| steelseriesOrange | Base / idle | Not matched |
+| twilight | Base / idle | Not matched |
+| vaporDreams | Base / idle | Not matched |
+| wabashAndLake | Needs version-specific inspection | Not matched |
+| warpDrive | Base / idle | Not matched |
+| westCoast | Base / idle | Not matched |
+
+The three **reactive** identifiers are especially important for keypress-triggered lighting. Our first `ripple` and `reactive` implementations are infrastructure to reach them; we should replicate the official preset's timing, color, origin and propagation from its authorized local configuration data instead of treating generic effects as finished ports.
+
+### Acceptance rules for each official preset
+
+A preset is **complete** only when its vendor-defined name, palette, gradient stops, animation phase/speed, spatial layout, device key coverage, idle/reactive layering, and expected hardware output are documented and compared to GG behavior on the Mini. The initial nine native renderer names do **not** increase official-parity completion automatically.
+
 ## Roadmap to faithful GG default preset parity
 
 1. **Inventory shipped presets:** extract *preset names and parameter JSON* from the owner's local GG 121 Windows / GG 108 Mac Prism resources and/or a GG-created Prism database. Record official names/version and obtain screenshots or settings samples. The actual installed defaults must come from the licensed user's installation, not guesses.
