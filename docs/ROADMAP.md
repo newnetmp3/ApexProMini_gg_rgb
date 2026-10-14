@@ -48,13 +48,19 @@ Status as of **2026-10-14**. Completion means stated acceptance criteria have ac
 
 Full port remains a separate roadmap: load actual GG preset configurations and match **all default SteelSeries GG Prism presets** with layered base/idle/reactive effects, parameter editing, masks/zones and save/import.
 
-## Factory catalog conversion and layer compositor (in progress)
+## Factory catalog conversion and layer compositor (PR #10 merged)
 
-**31 historical identifiers ≠ 31 distinct source definitions:** the owner's GG108.3 Prism SQL migrations contain 30 complete preset configurations, and GG106 later renames the existing `faze` locale key to `redPulse`. Independent Rust selectors `gg:<name>` now provide **first-variant source-parameter-derived previews** for each historical name. All 31 can produce the Mini's 513-byte frame offline; no new hardware write commands were introduced.
+**PR [#10](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/10) merged** as `8629738a38d39d867b8a5137b6fee9fd897e53c3`; Rust + GUI + Python PR CI passed. **31 historical identifiers ≠ 31 distinct source definitions:** the owner's GG108.3 Prism SQL migrations contain 30 complete preset configurations, and GG106 later renames the existing `faze` locale key to `redPulse`. Independent Rust selectors `gg:<name>` now provide **first-variant source-parameter-derived previews** for each historical name. All 31 can produce the Mini's 513-byte frame offline; no new hardware write commands were introduced.
 
 Added a reusable `base + idle + reactive` pure lighting compositor, compatible with existing version-1 profiles; when no layer is configured, prior confirmed native ripple rendering remains unchanged.
 
 **Still blocking strict parity:** **36 additional multi-region masks now implemented but coordinate alignment unverified**, GG foreground/background/aperture/alpha graph behavior, device-specific geometry, 121-version profile catalogue differences, **five heatmap analog threshold bands mapped offline but missing verified live analog data**, and side-by-side real-hardware confirmation. Full details and next-test matrix: [`docs/FACTORY_PRESETS.md`](FACTORY_PRESETS.md).
+
+## Automated offline visual verification
+
+**Working branch `feature/headless-prism-visual-regression`:** optional read-only binary `prism-preview` renders a complete SVG sheet with **31 factory-style modes × three phases**, including synthetic keypress samples for reactive presets. GitHub Actions uploads a downloadable `apex-mini-prism-factory-previews` artifact. This supports remote inspection and regression review with no keyboard or graphical desktop. Initial generator CI/PR acceptance pending.
+
+**Next fidelity gates** after the gallery: GG foreground/background/aperture compositor, six-row to Mini-five-row coordinate calibration, analog Hall sensor readback, timing/opacity matching and device-side comparisons. SVG color regression is **not** proof of true vendor parity.
 
 ## Comprehensive GG preset parity (long-term requirement)
 
