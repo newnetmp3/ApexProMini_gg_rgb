@@ -90,6 +90,17 @@ pub fn by_index(index: u8) -> Option<&'static FactoryPreset> {
     PRESETS.get(index as usize)
 }
 
+/// Keep event history long enough for the selected source-period keypress
+/// animation, including slow 0.1x Single Key fades. Existing native ripple
+/// retains its original 2.5-second behavior.
+pub fn event_retention_seconds(index: u8, speed: f32) -> f32 {
+    let Some(spec) = by_index(index) else { return 2.5; };
+    let Some(kind) = crate::reactive_factory::kind_for_factory(spec.id) else {
+        return 2.5;
+    };
+    crate::reactive_factory::retention_seconds(kind, spec.period_ms, speed)
+}
+
 pub fn is_reactive(index: u8) -> bool {
     let Some(spec) = by_index(index) else { return false; };
     matches!(spec.id, "reactiveLine" | "reactiveRipple" | "reactiveSingleKey" | "heatmap")
@@ -170,31 +181,10 @@ pub fn render(index: u8, hid: u8, x: f32, y: f32, seconds: f32, config: Config, 
         }
         return mix(from_hex(0x070070), from_hex(0xff3c00), heat.min(1.0));
     }
-    if is_reactive(index) {
-        let duration = (spec.period_ms as f32 / 1000.0).max(0.05) / config.speed.max(0.1);
-        let mut strength = 0.0_f32;
-        for hit in hits {
-            let age = seconds - hit.when;
-            if !(0.0..=5.0).contains(&age) || age > duration { continue; }
-            let Some((hx, hy)) = crate::effects::position(hit.hid) else { continue; };
-            let distance = ((x - hx).powi(2) + (y - hy).powi(2)).sqrt();
-            let u = age / duration;
-            let pulse = match spec.id {
-                "reactiveSingleKey" => {
-                    if hid == hit.hid { 1.0 - u } else { 0.0 }
-                }
-                "reactiveLine" => {
-                    let band = (y - hy).abs();
-                    let ring = (x - hx).abs() - u * 1.2;
-                    (-(band / 0.13).powi(2)).exp() * (-(ring / 0.14).powi(2)).exp() * (1.0 - u)
-                }
-                _ => {
-                    let ring = distance - u * 1.4;
-                    (-(ring / 0.14).powi(2)).exp() * (1.0 - u)
-                }
-            };
-            strength = strength.max(pulse);
-        }
+    if let Some(kind) = crate::reactive_factory::kind_for_factory(spec.id) {
+        let strength = crate::reactive_factory::intensity(
+            kind, hid, x, y, seconds, config, spec.period_ms, hits,
+        );
         return mix(config.base, sample(spec.stops, 0.0), strength);
     }
 
@@ -281,6 +271,21 @@ mod tests {
         assert_eq!(heatmap_color_for_actuation(2951), from_hex(0x0000ff));
     }
 
+    #[test]
+    fn historical_slow_single_key_persists_beyond_default_hit_pruning() {
+        let id = find("gg:reactiveSingleKey").unwrap();
+        assert!((event_retention_seconds(id, 0.1) - 12.5).abs() < 1e-5);
+        let cfg = Config { speed: 0.1, brightness: 1.0, ..Config::default() };
+        let now = 3.0;
+        let with = crate::effects::frame(crate::effects::Preset::Factory(id), cfg,
+            now, &[KeyHit { hid: 4, when: 0.0 }]);
+        let without = crate::effects::frame(crate::effects::Preset::Factory(id), cfg,
+            now, &[]);
+        assert_ne!(with.iter().find(|k| k.hid == 4).unwrap().rgb,
+            without.iter().find(|k| k.hid == 4).unwrap().rgb);
+        assert_eq!(with.iter().find(|k| k.hid == 22).unwrap().rgb,
+            without.iter().find(|k| k.hid == 22).unwrap().rgb);
+    }
     #[test]
     fn original_factory_reactive_presets_respond_to_hits() {
         let config = Config { brightness: 1.0, ..Config::default() };
