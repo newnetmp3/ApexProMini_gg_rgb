@@ -200,7 +200,7 @@ impl ControlCenter {
                 self.selected_key = Some(item.hid);
             }
         }
-        if self.profile.preset.needs_key_events() {
+        if self.profile.preset.needs_key_events() || self.profile.reactive.is_some() {
             ui.horizontal(|ui| {
                 if ui.button("Simulate ripple from selected key").clicked() {
                     self.preview_hit = self.selected_key.map(|hid| KeyHit {
