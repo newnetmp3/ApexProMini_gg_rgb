@@ -46,6 +46,12 @@ The source data was recovered from the owner's GG 108.3 Prism SQL migrations and
 
 The independent pure Rust compositor now supports ordered graphic layers, four blend modes, alpha, per-layer spatial origin/rotation/scale, repetition/phase shifts and masked apertures. West Coast, Haze, and Warp Drive factory-style previews have been migrated onto this engine, keeping source-derived functional colors and periods. Offline tests make this inspectable while the user is remote. **This is a new approximation, not exact vendor aperture-mask fidelity.** See [`docs/COMPOSITOR.md`](COMPOSITOR.md).
 
+## Source-duration factory reactive effects
+
+Historical GG selectors `gg:reactiveRipple`, `gg:reactiveLine` and `gg:reactiveSingleKey` have independent pure trigger envelopes with GG-derived nominal periods (250ms, 500ms and 1250ms). Each has bounded overlap handling, exact expiry and native-Mini key coordinates; the 0.1× slow Single Key event is retained in memory for up to 12.5 seconds rather than truncated after the previous 2.5-second generic window. Relative-duration SVG snapshots, daemon and GUI simulation use the same timing model.
+
+**Verification:** offline Rust tests; the actual GG wavefront/shader/falloff is unknown and none of these factory variants has been hardware parity-tested. Owner-verified *native* `ripple` remains unchanged. [Detailed event timing audit](REACTIVE_FACTORY.md).
+
 ## Native GUI foundation
 
 The first `apex-mini-gui` (Rust eframe/egui) editor exposes fourteen native renderer prototypes (original nine, plus comet, mirrored rainbow, prismatic sweep, keypress heatmap, and reactive line), a simulated keyboard-map preview, validated color/timing controls, and static overrides painted onto individual keys. It controls the **single already-working systemd user daemon** through a saved per-user profile, never writing HID concurrently. A 31-identifier historical GG preset catalog is visible in the GUI **as parameter-derived, not parity-certified factory-style previews**, not as 31 finished GG equivalents.

@@ -139,13 +139,17 @@ impl ControlCenter {
 
     fn colors(&self) -> Vec<apex_pro_mini::KeyColor> {
         let seconds = self.clock.elapsed().as_secs_f32();
-        let hits = self.preview_hit.iter().copied().filter(|hit| seconds - hit.when < 2.5).collect::<Vec<_>>();
-        let mut colors = Stack {
+        let stack = Stack {
             base: self.profile.preset,
             idle: self.profile.idle,
             reactive: self.profile.reactive,
             idle_after_seconds: self.profile.idle_after_seconds,
-        }.render(self.profile.config, seconds,
+        };
+        let max_age = stack.key_history_seconds(self.profile.config.speed);
+        let hits = self.preview_hit.iter().copied()
+            .filter(|hit| (0.0..max_age).contains(&(seconds - hit.when)))
+            .collect::<Vec<_>>();
+        let mut colors = stack.render(self.profile.config, seconds,
             self.preview_hit.map(|hit| hit.when).unwrap_or(0.0),
             &hits);
         for item in &mut colors {
@@ -196,7 +200,7 @@ impl ControlCenter {
                 self.selected_key = Some(item.hid);
             }
         }
-        if self.profile.preset.needs_key_events() {
+        if self.profile.preset.needs_key_events() || self.profile.reactive.is_some() {
             ui.horizontal(|ui| {
                 if ui.button("Simulate ripple from selected key").clicked() {
                     self.preview_hit = self.selected_key.map(|hid| KeyHit {

@@ -200,7 +200,11 @@ fn run_animation(options: Options) -> Result<(), String> {
                     }
                 }
             }
-            hits.retain(|hit| elapsed - hit.when < 2.5);
+            // Source GG Single Key has a 1250ms period; slow profiles can
+            // last 12.5s. The old fixed 2.5s window cut off that fade.
+            // Native ripple retains its previous 2.5s history window.
+            let history = stack.key_history_seconds(options.config.speed);
+            hits.retain(|hit| elapsed - hit.when < history);
         }
         let mut colors = stack.render(options.config, elapsed, last_key_at, &hits);
         for key in &mut colors {

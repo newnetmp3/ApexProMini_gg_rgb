@@ -132,6 +132,10 @@ cargo run --release -- --preview-effect gg:reactiveRipple
 
 The new profile engine also supports optional `idle=`, `idle_seconds=` and `reactive=` fields in the existing version-1 `profile.conf`. Old profiles load unchanged; no changes to previously confirmed HID packets or the daemon's default native ripple. More information: [factory preset technical audit](docs/FACTORY_PRESETS.md).
 
+## GG historical reactive preset timing
+
+The independent factory-style modes `gg:reactiveRipple`, `gg:reactiveLine` and `gg:reactiveSingleKey` now use recovered nominal trigger periods (250/500/1250ms), with distinct radial, row-based and exact-key envelopes. Adaptive in-memory event retention prevents early cutoff of slow factory effects. GUI simulation and read-only SVG snapshots use matching timing. The original owner-confirmed native `ripple` remains unchanged. The actual SteelSeries GG shaders, key masks and decay equations are still unverified. [Technical event timing and acceptance](docs/REACTIVE_FACTORY.md).
+
 ## Reusable offline scene compositor
 
 The effects-only engine now includes an independent `src/compositor.rs` supporting ordered foreground/background layers, four blend modes, opacity, origin/rotation/repeats and separate aperture masks. Three complex factory-style scenes (`gg:westCoast`, `gg:haze`, `gg:warpDrive`) use declarative composition recipes. This is a **software-tested independent reconstruction**, not an assertion of exact SteelSeries GG shader parity. The known-safe Mini USB protocol and working reactive user service are unchanged. [Rendering architecture and fidelity gaps](docs/COMPOSITOR.md).

@@ -52,6 +52,14 @@ impl Preset {
             other => crate::factory::find(other).map(Self::Factory),
         }
     }
+    /// Number of seconds of recent key-down events needed to render this
+    /// preset correctly. Native effects keep the original 2.5 s window.
+    pub fn key_history_seconds(self, speed: f32) -> f32 {
+        match self {
+            Self::Factory(index) => crate::factory::event_retention_seconds(index, speed),
+            _ => 2.5,
+        }
+    }
     pub fn needs_key_events(self) -> bool {
         match self {
             Self::Ripple | Self::Reactive | Self::Heatmap | Self::ReactiveLine => true,

@@ -20,6 +20,14 @@ impl Stack {
         self.base.needs_key_events() || self.idle.is_some() || self.reactive.is_some()
     }
 
+    /// Retain events for the longest configured animation, including a
+    /// factory reactive overlay. Does not affect the actual RGB serializer.
+    pub fn key_history_seconds(self, speed: f32) -> f32 {
+        let base = self.base.key_history_seconds(speed);
+        let idle = self.idle.map_or(2.5, |p| p.key_history_seconds(speed));
+        let reactive = self.reactive.map_or(2.5, |p| p.key_history_seconds(speed));
+        base.max(idle).max(reactive)
+    }
     pub fn render(self, config: Config, now: f32, last_key: f32, hits: &[KeyHit]) -> Vec<KeyColor> {
         let idling = self.idle.is_some()
             && now - last_key >= self.idle_after_seconds.max(0.1);
@@ -101,6 +109,16 @@ mod tests {
         assert_eq!(encode_direct_write(&active).unwrap()[2], 68);
     }
 
+    #[test]
+    fn stack_keeps_slow_factory_reactive_overlay_event_history() {
+        let native = Stack { base: Preset::Ripple, idle: None, reactive: None,
+            idle_after_seconds: 15.0 };
+        assert_eq!(native.key_history_seconds(0.1), 2.5);
+        let layered = Stack { base: Preset::Solid, idle: None,
+            reactive: Some(Preset::from_name("gg:reactiveSingleKey").unwrap()),
+            idle_after_seconds: 15.0 };
+        assert!((layered.key_history_seconds(0.1) - 12.5).abs() < 1e-5);
+    }
     #[test]
     fn input_required_when_idle_or_reactive_uses_events() {
         assert!(!Stack { base: Preset::Solid, idle: None, reactive: None,
