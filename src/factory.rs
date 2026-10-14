@@ -182,25 +182,30 @@ pub fn render(index: u8, hid: u8, x: f32, y: f32, seconds: f32, config: Config, 
         return mix(config.base, sample(spec.stops, 0.0), strength);
     }
 
-    let spatial = match spec.geometry {
+    let variant = crate::regions::select(spec.id, x, y);
+    let geometry = variant.map(|v| v.geometry).unwrap_or(spec.geometry);
+    let wavelength = variant.map(|v| v.wavelength).unwrap_or(spec.wavelength);
+    let period_ms = variant.map(|v| v.period_ms).unwrap_or(spec.period_ms);
+    let stops = variant.map(|v| v.stops).unwrap_or(spec.stops);
+    let spatial = match geometry {
         1 => ((x - 0.5).powi(2) + (y - 0.5).powi(2)).sqrt() * 1.5,
         2 => y,
         3 => x * 0.55 + y * 0.45,
         _ => x + y * 0.12,
     };
-    let ratio = if spec.wavelength == 0 {
+    let ratio = if wavelength == 0 {
         0.0
     } else {
-        (64.0 / f32::from(spec.wavelength.unsigned_abs())).clamp(0.1, 20.0)
+        (64.0 / f32::from(wavelength.unsigned_abs())).clamp(0.1, 20.0)
     };
-    let direction = if spec.wavelength < 0 { -1.0 } else { 1.0 };
-    let clock = if spec.period_ms == 0 {
+    let direction = if wavelength < 0 { -1.0 } else { 1.0 };
+    let clock = if period_ms == 0 {
         0.0
     } else {
-        seconds.max(0.0) * config.speed * 1000.0 / spec.period_ms as f32
+        seconds.max(0.0) * config.speed * 1000.0 / period_ms as f32
     };
     let phase = (spatial * ratio * direction + clock).rem_euclid(1.0) * 255.0;
-    let rgb = sample(spec.stops, phase);
+    let rgb = sample(stops, phase);
     if spec.id == "haze" {
         // Single-color graphics have additional aperture/background animation
         // in GG; this independent breath approximation is not a parity match.
@@ -262,6 +267,14 @@ mod tests {
         let later = find("gg:redPulse").unwrap();
         assert_eq!(PRESETS[first as usize].period_ms, PRESETS[later as usize].period_ms);
         assert_eq!(PRESETS[first as usize].stops, PRESETS[later as usize].stops);
+    }
+    #[test]
+    fn source_derived_regional_palettes_affect_keyboard_rows() {
+        let config = Config { brightness: 1.0, ..Config::default() };
+        let idx = find("gg:pride").unwrap();
+        let top = render(idx, 30, 0.24, 0.0, 0.0, config, &[]);
+        let bottom = render(idx, 44, 0.24, 1.0, 0.0, config, &[]);
+        assert_ne!(top, bottom);
     }
     #[test]
     fn palette_samples_are_bounded_at_edges_and_repeated_stops() {
