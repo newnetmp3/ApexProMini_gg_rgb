@@ -66,7 +66,7 @@ Added a reusable `base + idle + reactive` pure lighting compositor, compatible w
 
 [PR #12](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/12) merged as `ca2deeca512a43a44a1dc08aaa65bcf5468b319c` with Rust, Clippy, GUI, Python and SVG-gallery CI passing. It adds an independent pure renderer for `westCoast`, `haze` and `warpDrive` foreground/background/aperture structures. Gradient colors, periods, wave signs and geometry classes are sourced from authorized local GG configuration analysis, but the bounded cosine-based aperture interpolation and compositing equations are our own. Offline Rust frame tests apply; full vendor shader parity is **not** achieved or owner-verified.
 
-**Independent generic support added (branch `feature/prism-layer-compositor-v2`):** z-ordered scenes, per-layer opacity, Normal/Add/Multiply/Screen blends, origin/rotation/scale, repeats and phase offsets, cosine/band apertures. West Coast, Haze and Warp Drive migrated to declarative scene recipes. These are original, offline-tested primitives and not GG shader equivalence. See [`docs/COMPOSITOR.md`](COMPOSITOR.md).
+**Independent generic support merged (PR #13):** z-ordered scenes, per-layer opacity, Normal/Add/Multiply/Screen blends, origin/rotation/scale, repeats and phase offsets, cosine/band apertures. West Coast, Haze and Warp Drive migrated to declarative scene recipes. These are original, offline-tested primitives and not GG shader equivalence. See [`docs/COMPOSITOR.md`](COMPOSITOR.md).
 
 **Next fidelity milestone:** verify GG's actual mask/anchor/opacity semantics from authorized reference behavior, then accurately port reactive graphics and regional layout coordinates, preserving original HID and native ripple. No GUI QA while user is remote.
 
@@ -76,7 +76,7 @@ The target is **all default presets shipped by official SteelSeries GG Prism**, 
 
 ## Effects parity: independent compositor foundation
 
-**Current branch:** `feature/prism-layer-compositor-v2`. Source GG 108.3 functional palette/timing/wavelength values remain distinct from our independently designed shader. `src/compositor.rs` defines reusable ordered scene recipes; effects are rendered offline and the 513-byte Feature serializer is unchanged. New tests cover layer order, blending/opacity, transforms, mask repetition and numerical color samples.
+**Merged [PR #13](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/13)**, squash SHA `72172a31a26e93f73e2e29e69144c24af6d13538`; Rust/Clippy, native GUI compile, Python and SVG-gallery CI green. Source GG 108.3 functional palette/timing/wavelength values remain distinct from our independently designed shader. `src/compositor.rs` defines reusable ordered scene recipes; effects are rendered offline and the 513-byte Feature serializer is unchanged. New tests cover layer order, blending/opacity, transforms, mask repetition and numerical color samples.
 
 **Not yet accepted as full parity:** actual GG shader equations, per-preset layer order and alpha, source 6-row / Mini 5-row geometry, reactive heat envelopes and analog readback, real-world visual comparison. For fidelity tracking see [`docs/COMPOSITOR.md`](COMPOSITOR.md) and [`docs/FACTORY_PRESETS.md`](FACTORY_PRESETS.md).
 
