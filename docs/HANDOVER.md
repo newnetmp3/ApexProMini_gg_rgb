@@ -2,7 +2,7 @@
 
 **Updated:** 2026-10-14  
 **Repository:** https://github.com/newnetmp3/ApexProMini_gg_rgb  
-**Integration status:** Bootstrap branch `bootstrap/research-handover`, intended for PR into `main`. Check the current GitHub branch and workflow results before continuing.  
+**Integration status:** PR [#1](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/1) merged to `main` (squash commit `5364b999ab4439f9d52f03b856aa8587c9f7fafb`). GitHub Actions `python-tests` passed, including syntax validation and four hardware-free tests. Always recheck the current branch before continuing.  
 **Target:** Wired SteelSeries Apex Pro Mini, VID:PID `1038:161e` on Arch Linux / KDE Plasma / Wayland. This repo is independent from upstream `Ven0m0/steelseriesgg-rs`.
 
 ## Goal
@@ -43,6 +43,11 @@ Create a native Linux/Rust implementation for **verified** Apex Pro Mini RGB and
 3. Provide an opt-in static red/green/blue test that verifies exact VID/PID and report sizes before any write. No broad command scanning, flashing, macros, or actuation testing.
 4. Test real key lighting and per-key order on owner's Mini; document results and regressions. Only then mark RGB supported.
 5. Expand to Prism effects and profiles, then separately validate actuation/rapid trigger.
+
+## Verification history
+
+- 2026-10-14: Initial repository, research docs, original read-only probe, local-only decryption helper, test suite and transport patch merged via PR #1. GitHub Actions test job succeeded. **No Mini RGB device write has been implemented or hardware-verified in this repository.**
+- Next task: recover the actual `direct_write` HID frame serializer from the privately decrypted Mini descriptor's inherited includes and/or verified official GG RGB traces. Build a safe independent Rust codec only after exact bytes are established.
 
 ## Rolling-handover process
 
