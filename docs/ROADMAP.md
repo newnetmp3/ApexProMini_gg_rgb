@@ -11,25 +11,25 @@ Status as of **2026-10-14**. Completion means stated acceptance criteria have ac
 | 4. Establish Mini-specific RGB serializer | **Static specification verified** | New inherited `base_apex_2022_wired` confirms `0x40` Feature, `0x41` Output and field layouts |
 | 5. Implement independent Rust Mini codec | **Complete — PR #2** | Squash SHA `2ccb9f67d63d`; bounded frame builders, golden-byte unit tests, guarded device selection, Rust tests and Clippy green on branch |
 | 6. Verify real Mini static RGB/per-key selection | **Whole-board solid RGB hardware verified** | A red, S green, `0x41` clear restored, **all physical keys turned blue**. Different simultaneous colors and layout fidelity still pending |
-| 7. Lighting effects and Prism profiles | **RGB solid verified; PR #6 input ACL merged, untested on hardware** | Owner's Mini `event11`/`event12` returned `EACCES`. Device-only `71-` uaccess rule & explicit installer merged as `e22b2c4d`; owner must install/reconnect and confirm keypress detection and visible ripple |
+| 7. Lighting effects and Prism profiles | **Static RGB + native keypress ripple hardware-verified; GG parity still in progress** | After PR #6's Mini-scoped udev ACL, the owner reported **“IT WORKS!”** on ripple retest. Other animations, precise wave geometry, systemd service persistence and 31 official preset matches not yet verified |
 | 8. Read-only device state/firmware status | Not started | Real readback without altering settings |
 | 9. Actuation/Rapid Trigger/remapping | Not started | Independently verified commands and rollback |
 | 10. Package Linux service/application | Not started | Native installation, permissions, regressions and CI |
 
-**Confirmed hardware:** A red, S green, clear restoring onboard lighting, and entire keyboard solid blue. **Confirmed ripple blocker:** `Permission denied (os error 13)` for both USB Mini `/dev/input/event11` and `event12`. The input stream cannot be read until a scoped ACL is applied; ripple itself still needs live verification.
+**Confirmed hardware:** A red, S green, clear restoring onboard lighting, and entire keyboard solid blue. **Resolved ripple blocker:** Mini `event11` and `event12` initially failed with `Permission denied (os error 13)`. The scoped input ACL milestone was followed by owner-confirmed **working keypress ripple**. Do not infer exact GG preset fidelity or background daemon reliability from this single live success.
 
-**Latest development:** PR [#4](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/4), squash SHA `570ccddee9c254bd2de28c7e9b1fb62ece192756`, merged full-keyboard effect infrastructure and catalog. **Next hardware gates:** read-only Linux evdev `--test-input` showing A/S keydowns; then actual keypress-triggered ripple and spatial layout accuracy. Do not mark these as working before physical feedback.
+**Latest development:** PR [#4](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/4), squash SHA `570ccddee9c254bd2de28c7e9b1fb62ece192756`, merged full-keyboard effect infrastructure and catalog. **Next hardware gates:** verify optional systemd user service lifecycle, performance and reconnect; test the other animated effects and compare native ripple's spatial behavior to SteelSeries GG. Do not mark these as working before physical feedback.
 
 ## Input device access and service acceptance criteria
 
 - When a `--list-inputs` scan detects the device but reports `[no read access]`, offer only a dedicated Mini `uaccess` seat ACL rule; avoid `sudo` services, global `input` group grants and world-readable evdev.
 - Rule must match `event*` keyboard inputs under `1038:161e`, with a `71-` prefix that precedes systemd `73-seat-late.rules`.
-- Owner must explicitly install via `scripts/install-input-permissions.sh`, reconnect the keyboard, and confirm read-only `--test-input` works before ripple is claimed fixed.
+- Owner-confirmed **working ripple** after following the scoped ACL installation/testing guidance. The exact `--test-input` output was not supplied, so individual diagnostic event IDs are not independently documented.
 
 ## Service and reactive input acceptance criteria
 
 - Read-only diagnostics identify the correct wired Mini input device(s), with visible A/S/Space keydown codes; no other devices read.
-- Ripple event fires on owner hardware with physical expanding lighting around the pressed key, normal typing unaffected.
+- **Working native ripple owner-confirmed**. Precise expanding geometry, typing unaffected under load, and exact GG preset parity require separate observations.
 - Repeated presses, held keys and no-press periods behave correctly; no unintended writes after Ctrl+C.
 - Optional `systemd --user` unit runs as the user's UID, never root; auto-restarts after device disconnect and re-enumerates hidraw/event nodes.
 - Service installation remains disabled by default until explicitly enabled. No key contents are persisted or logged.
