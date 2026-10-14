@@ -3,7 +3,8 @@
 //! no key strings, timestamps, or input events are persisted.
 use apex_pro_mini::effects::{self, Config, KeyHit, Preset, PRESET_NAMES};
 use apex_pro_mini::{encode_clear_direct_write, encode_direct_write, rgb_from_hex};
-use apex_pro_mini::input;
+use apex_pro_mini::input::{self, InputMessage};
+use std::sync::mpsc::{RecvTimeoutError, TryRecvError};
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
@@ -106,26 +107,20 @@ fn parse_args(args: &[String]) -> Result<Options, String> {
     if !options.preview && !options.confirmed {
         return Err("Device writes require --confirm-device-write (nothing sent).".into());
     }
-    if !options.preview && options.preset.needs_key_events() && options.input.is_none() {
-        return Err("Ripple/reactive requires --input /dev/input/eventN; find the correct Mini device with --list-inputs".into());
-    }
     if !options.preset.needs_key_events() && options.input.is_some() {
         return Err("--input is only valid for ripple and reactive effects".into());
     }
     Ok(options)
 }
 
-fn static_effect(preset: Preset) -> bool {
-    matches!(preset, Preset::Solid | Preset::Gradient)
-}
-
 fn run_animation(options: Options) -> Result<(), String> {
     // Open evdev input BEFORE writing RGB so missing permissions cannot
     // strand the keyboard in direct lighting mode.
-    let input_rx = if options.preset.needs_key_events() {
-        Some(input::start_reader(options.input.as_ref().expect("validated input"))?)
+    let (input_rx, mut active_readers) = if options.preset.needs_key_events() {
+        let (rx, count) = input::start_readers(options.input.as_deref())?;
+        (Some(rx), count)
     } else {
-        None
+        (None, 0)
     };
     let endpoint = discover_control()?;
     let file = open_guarded(&endpoint)?;
@@ -140,7 +135,7 @@ fn run_animation(options: Options) -> Result<(), String> {
         options.preset, endpoint.device, options.fps, options.config.speed
     );
     if options.preset.needs_key_events() {
-        println!("Passive keypress illumination; normal key typing is not intercepted or recorded.");
+        println!("Monitoring {active_readers} verified Mini evdev reader(s); normal typing is not intercepted or logged.");
     }
 
     let mut next_frame = Instant::now();
@@ -150,13 +145,25 @@ fn run_animation(options: Options) -> Result<(), String> {
         if let Some(receiver) = &input_rx {
             loop {
                 match receiver.try_recv() {
-                    Ok(hid) => {
+                    Ok(InputMessage::Press { hid }) => {
                         hits.push(KeyHit { hid, when: elapsed });
-                        if hits.len() > 32 { hits.remove(0); }
+                        if hits.len() > 32 {
+                            hits.remove(0);
+                        }
                     }
-                    Err(std::sync::mpsc::TryRecvError::Empty) => break,
-                    Err(std::sync::mpsc::TryRecvError::Disconnected) => {
-                        break 'animation Err("Mini keyboard input event device disconnected or unreadable. Restoring onboard lighting.".into());
+                    Ok(InputMessage::Unmapped { .. }) => {
+                        // Never log typed keys in the background effect process.
+                    }
+                    Ok(InputMessage::ReaderStopped { device, reason }) => {
+                        eprintln!("Apex Mini input source {} disconnected: {reason}", device.display());
+                        active_readers = active_readers.saturating_sub(1);
+                        if active_readers == 0 {
+                            break 'animation Err("All Mini evdev readers stopped. Attempting to restore onboard lighting before service restart.".into());
+                        }
+                    }
+                    Err(TryRecvError::Empty) => break,
+                    Err(TryRecvError::Disconnected) => {
+                        break 'animation Err("All Mini input readers disconnected. Restoring onboard lighting.".into());
                     }
                 }
             }
@@ -167,8 +174,7 @@ fn run_animation(options: Options) -> Result<(), String> {
             Ok(report) => report,
             Err(e) => break Err(e),
         };
-        let must_send = !static_effect(options.preset)
-            || previous.as_ref() != Some(&packet);
+        let must_send = previous.as_ref() != Some(&packet);
         if must_send {
             if let Err(error) = send_feature(&file, packet, false) {
                 break Err(error);
@@ -196,7 +202,65 @@ fn run_animation(options: Options) -> Result<(), String> {
     }
 }
 
+/// Read-only: show physical Mini keydown events for a short bounded interval.
+/// This does not open hidraw or modify lighting. Only key IDs are printed when
+/// the user explicitly requests input debugging; no logs or files are written.
+fn test_input(args: &[String]) -> Result<(), String> {
+    let mut duration = 10u64;
+    let mut selected = None::<PathBuf>;
+    let mut index = 1usize;
+    while index < args.len() {
+        let flag = &args[index];
+        let value = args.get(index + 1).ok_or_else(|| format!("Missing argument for {flag}"))?;
+        match flag.as_str() {
+            "--seconds" => {
+                duration = value.parse::<u64>().map_err(|_| "Seconds must be a positive integer")?;
+                if !(1..=30).contains(&duration) {
+                    return Err("Input diagnostic duration must be 1-30 seconds".into());
+                }
+            }
+            "--input" => selected = Some(PathBuf::from(value)),
+            _ => return Err(format!("Unexpected input diagnostic flag: {flag}")),
+        }
+        index += 2;
+    }
+    let (receiver, readers) = input::start_readers(selected.as_deref())?;
+    let end = Instant::now() + Duration::from_secs(duration);
+    let mut press_count = 0u32;
+    let mut unmapped = 0u32;
+    println!("Read-only Mini keypress diagnostic: {readers} evdev reader(s), {duration} seconds.");
+    println!("Press A, S, Space, and other keys on the Apex Pro Mini now.");
+    println!("Live key IDs are displayed ONLY during this explicitly requested test; nothing is saved.");
+    while let Some(time) = end.checked_duration_since(Instant::now()) {
+        match receiver.recv_timeout(time.min(Duration::from_millis(250))) {
+            Ok(InputMessage::Press { hid }) => {
+                press_count += 1;
+                println!("Mini keydown #{press_count}: USB HID usage {hid}");
+            }
+            Ok(InputMessage::Unmapped { linux_code }) => {
+                unmapped += 1;
+                println!("Unmapped Mini keydown (Linux EV_KEY code {linux_code}); no effect triggered");
+            }
+            Ok(InputMessage::ReaderStopped { device, reason }) => {
+                return Err(format!("Mini input stream {} ended: {reason}", device.display()));
+            }
+            Err(RecvTimeoutError::Timeout) => {}
+            Err(RecvTimeoutError::Disconnected) => {
+                return Err("Mini evdev readers closed while testing.".into());
+            }
+        }
+    }
+    println!("Diagnostic finished: {press_count} mapped and {unmapped} unmapped keypresses observed.");
+    if press_count == 0 {
+        println!("No mapped keypresses found. This confirms the lighting issue is upstream of ripple rendering; inspect --list-inputs and key event permissions.");
+    }
+    Ok(())
+}
+
 pub fn run_effect(args: &[String]) -> Result<(), String> {
+    if args.first().is_some_and(|arg| arg == "--test-input") {
+        return test_input(args);
+    }
     if args.first().is_some_and(|arg| arg == "--list-inputs") {
         if args.len() != 1 {
             return Err("--list-inputs accepts no other arguments".into());
@@ -208,7 +272,10 @@ pub fn run_effect(args: &[String]) -> Result<(), String> {
         } else {
             println!("USB 1038:161e keyboard event devices (no reads or writes performed):");
             for path in options {
-                println!("  {}", path.display());
+                let readable = std::fs::File::open(&path)
+                    .map(|_| "readable")
+                    .unwrap_or("no read access");
+                println!("  {} [{readable}]", path.display());
             }
         }
         return Ok(());
@@ -241,7 +308,7 @@ mod tests {
     }
     #[test]
     fn reactive_effect_requires_scoped_input_and_bounds_fps() {
-        assert!(parse(&["--effect", "ripple", "--confirm-device-write"]).is_err());
+        assert!(parse(&["--effect", "ripple", "--confirm-device-write"]).is_ok()); // auto-discover Mini evdev nodes
         assert!(parse(&["--effect", "ripple", "--input", "/dev/input/event3", "--confirm-device-write"]).is_ok());
         assert!(parse(&["--effect", "wave", "--fps", "999", "--confirm-device-write"]).is_err());
         assert!(parse(&["--effect", "wave", "--speed", "NaN", "--confirm-device-write"]).is_err());
