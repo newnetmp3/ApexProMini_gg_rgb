@@ -59,7 +59,7 @@ Of the 30 historical definitions, **eight have multiple region/layout variants:*
 
 Additional compositing complexity appears in `westCoast`, `haze`, `warpDrive` and the `reactiveLine`, `reactiveRipple`, and `reactiveSingleKey` presets, which contain background/aperture features. The exact mathematical implementation of GG's compositor has **not** been reproduced; our current effect phase and layer blending code is an original approximation designed for portability.
 
-The `heatmap` source defines an actuation-triggered special effect with its own heat thresholds; the first renderer approximates recent key activity, not those exact thresholds. **Source-level parameter parity is only partial**, despite the 31 working selectors.
+The `heatmap` source defines an actuation-triggered special effect with its own heat thresholds; the renderer currently approximates recent key activity, while `heatmap_color_for_actuation` now independently implements the five source-defined analog depth/color threshold bands with boundary unit tests. Live analog actuation values are **not available from the verified evdev interface**, so the true hardware heatmap still needs a safe separately verified input protocol. **Source-level parameter parity is only partial**, despite the 31 working selectors.
 
 ## Recommended next development slices (do not wait for GUI QA)
 
