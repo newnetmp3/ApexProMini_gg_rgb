@@ -4,7 +4,12 @@
 //!
 //! Byte layout verified by static specification; the wired Mini A-key red
 //! color response was confirmed by an owner hardware test on 2026-10-14.
-//! Other keys, clear mode, and multi-key payloads remain unverified.
+//! A-key red, S-key green, and 0x41 clear have been observed on hardware.
+//! Simultaneous multi-key effects are the next verification milestone.
+
+pub mod effects;
+#[cfg(target_os = "linux")]
+pub mod input;
 
 pub const VENDOR_ID: u16 = 0x1038;
 pub const PRODUCT_ID: u16 = 0x161e;
@@ -106,6 +111,12 @@ pub fn encode_direct_write(keys: &[KeyColor]) -> Result<[u8; FEATURE_REPORT_BYTE
         data[offset + 3] = entry.rgb.blue;
     }
     Ok(data)
+}
+
+/// Produce a complete 68-key solid-color update for the Mini's official key list.
+/// This is independent of physical region; optional ISO/JIS keys are included.
+pub fn uniform_keys(rgb: Rgb) -> Vec<KeyColor> {
+    ADDRESSABLE_HID_CODES.iter().copied().map(|hid| KeyColor { hid, rgb }).collect()
 }
 
 /// Direct mode release; **not** an APPLY/SAVE command.
@@ -244,6 +255,16 @@ mod tests {
         let red = Rgb { red: 255, green: 0, blue: 0 };
         assert!(encode_direct_write(&[KeyColor { hid: 0, rgb: red }]).is_err());
         assert!(encode_direct_write(&[KeyColor { hid: 4, rgb: red }, KeyColor { hid: 4, rgb: red }]).is_err());
+    }
+
+    #[test]
+    fn uniform_colors_include_each_key_once() {
+        let rgb = Rgb { red: 3, green: 22, blue: 189 };
+        let keys = uniform_keys(rgb);
+        assert_eq!(keys.len(), ADDRESSABLE_KEY_COUNT);
+        assert_eq!(keys[0].hid, ADDRESSABLE_HID_CODES[0]);
+        assert!(keys.iter().all(|key| key.rgb == rgb));
+        assert_eq!(encode_direct_write(&keys).unwrap()[2], 68);
     }
 
     #[test]
