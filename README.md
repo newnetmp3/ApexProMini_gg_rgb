@@ -119,6 +119,19 @@ bash scripts/install-input-permissions.sh
 
 This explicitly installs a **Mini-only** `uaccess` seat ACL rule to `/etc/udev/rules.d/`, requiring `sudo` just for that file. It does not grant broad input-device access or start the daemon. Only enable the daemon after confirming actual A/S keypress events. [Detailed diagnosis and security notes](docs/SERVICE.md).
 
+## Offline Prism factory-style preset previews
+
+The owner's official GG 108.3 Prism SQL migrations yielded **30 complete historical effects definitions**; GG106 later renamed `faze` to `redPulse`. Every one of the **31 historical preset identifiers** now has an independent `gg:<name>` preview mode, using compact source-derived color/timing and spatial parameters. These are *partial ports* pending GG compositor, region masking, actual visual comparisons and hardware QA—not claims of exact SteelSeries preset fidelity.
+
+```bash
+cargo test --all-targets
+cargo run --release -- --preview-effect gg:aqua
+cargo run --release -- --preview-effect gg:prism
+cargo run --release -- --preview-effect gg:reactiveRipple
+```
+
+The new profile engine also supports optional `idle=`, `idle_seconds=` and `reactive=` fields in the existing version-1 `profile.conf`. Old profiles load unchanged; no changes to previously confirmed HID packets or the daemon's default native ripple. More information: [factory preset technical audit](docs/FACTORY_PRESETS.md).
+
 ## Source repositories
 
 - [steelseriesgg-rs](https://github.com/Ven0m0/steelseriesgg-rs): native Rust GG replacement; generic transport patch preserved in `patches/`.
