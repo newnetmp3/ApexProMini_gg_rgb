@@ -64,7 +64,7 @@ pub struct KeyHit {
 
 fn blend(a: Rgb, b: Rgb, fraction: f32) -> Rgb {
     let f = fraction.clamp(0.0, 1.0);
-    let mix = |x: u8, y: u8| ((x as f32 * (1.0 - f) + y as f32 * f).round() as u8);
+    let mix = |x: u8, y: u8| (x as f32 * (1.0 - f) + y as f32 * f).round() as u8;
     Rgb {
         red: mix(a.red, b.red),
         green: mix(a.green, b.green),
@@ -125,7 +125,7 @@ pub fn frame(preset: Preset, settings: Config, seconds: f32, hits: &[KeyHit]) ->
         let rgb = match preset {
             Preset::Solid => settings.base,
             Preset::Breathing => dim(settings.base, 0.07 + 0.93 * (0.5 + 0.5 * (t * 3.2).sin())),
-            Preset::Rainbow => hue(x * 0.9 + y * 0.13),
+            Preset::Rainbow => hue(x * 0.9 + y * 0.13 + t * 0.11),
             Preset::Wave => hue(x * 0.95 + y * 0.2 - t * 0.23),
             Preset::ColorShift => blend(settings.base, settings.accent, 0.5 + 0.5 * (t * 2.0).sin()),
             Preset::Gradient => blend(settings.base, settings.accent, x),
@@ -202,7 +202,7 @@ mod tests {
 
     #[test]
     fn static_modes_are_time_invariant() {
-        for preset in [Preset::Solid, Preset::Gradient, Preset::Rainbow] {
+        for preset in [Preset::Solid, Preset::Gradient] {
             let a = frame(preset, Config::default(), 0.0, &[]);
             let b = frame(preset, Config::default(), 4.0, &[]);
             assert_eq!(a.len(), b.len());
