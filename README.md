@@ -17,7 +17,7 @@ bash scripts/install-gui.sh
 
 This builds/installs the optional graphical executable (`apex-mini-gui`), updates the service to read the validated profile at `~/.config/apex-mini-rgb/profile.conf`, and adds a KDE application-menu launcher. It **preserves existing profiles** and does not automatically restart your running lighting daemon. Use **Apply & restart lighting** in the GUI to activate edits through the **single systemd user service**. CLI-only builds do not need GUI dependencies.
 
-The app currently exposes **nine native algorithms**, not exact faithful versions of all GG defaults. Its catalog shows the **31 historical GG Prism preset identifiers** with explicitly marked missing/approximate status. Exact vendor color palettes, base/idle/reactive layers, and behavior matching are active roadmap work; see [GUI documentation](docs/GUI.md) and [preset parity matrix](docs/PRESET_COVERAGE.md).
+The app currently exposes **fourteen native algorithms**, not exact faithful versions of all GG defaults. Its catalog shows the **31 historical GG Prism preset identifiers** with explicitly marked missing/approximate status. Exact vendor color palettes, base/idle/reactive layers, and behavior matching are active roadmap work; see [GUI documentation](docs/GUI.md) and [preset parity matrix](docs/PRESET_COVERAGE.md).
 
 **Status:** native GUI and profile-aware service are implemented and tested in CI, but require real KDE desktop and hardware acceptance before being marked working.
 
@@ -78,7 +78,7 @@ cargo build --release
 
 Replace `eventN` with the exact keyboard input node printed by `--list-inputs`. It must be readable by your user, and the application verifies that it belongs to USB `1038:161e`. No keyboard grabbing or typed text logging. The effect stays active until Ctrl+C; normal onboard lighting should return via the already hardware-verified `0x41` clear report.
 
-Effects currently available: **solid, gradient, rainbow, wave, breathing, color-shift, sparkle, ripple, reactive**. See [`docs/PRESET_COVERAGE.md`](docs/PRESET_COVERAGE.md) for the longer-term goal of **matching every official GG default preset**, including **31 official GG 108.3 preset identifiers already recovered from packaged SQL migrations** (not necessarily all simultaneously visible in GG), profiles, and base/idle/reactive layers.
+Effects currently available: **solid, gradient, rainbow, wave, breathing, color-shift, sparkle, ripple, reactive, comet, rainbow-split, prismatic-sweep, heatmap, reactive-line**. These are independent prototypes pending vendor fidelity checks. See [`docs/PRESET_COVERAGE.md`](docs/PRESET_COVERAGE.md) for the longer-term goal of **matching every official GG default preset**, including **31 official GG 108.3 preset identifiers already recovered from packaged SQL migrations** (not necessarily all simultaneously visible in GG), profiles, and base/idle/reactive layers.
 
 **New effect rendering and keypress tracking need physical verification.** Avoid assuming a successful write means the effects are visually correct.
 
