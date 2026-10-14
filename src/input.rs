@@ -15,7 +15,7 @@ pub enum InputMessage {
     /// Physical key-down mapped to a supported Mini HID key usage.
     Press { hid: u8 },
     /// Only sent for explicit diagnostics. Not retained or logged by the daemon.
-    UnsupportedKey,
+    Unmapped { linux_code: u16 },
     /// A reader ended (e.g., the keyboard was unplugged).
     ReaderStopped { device: PathBuf, reason: String },
 }
@@ -108,10 +108,9 @@ fn validate_selected_device(path: &Path) -> Result<(), String> {
     Ok(())
 }
 
-/// Extract an EV_KEY press from the native Linux input_event structure.
-/// Repeats (2), releases (0), other event types and unsupported HID usages
-/// return None, avoiding key bounce, auto-repeat storms, and non-key events.
-pub fn decode_keydown(bytes: &[u8]) -> Option<u8> {
+/// Extract Linux key-down codes without recording typed characters.
+/// Releases/repeats and non-key events are ignored.
+pub fn decode_linux_press(bytes: &[u8]) -> Option<u16> {
     if bytes.len() != EVENT_BYTES {
         return None;
     }
@@ -119,9 +118,12 @@ pub fn decode_keydown(bytes: &[u8]) -> Option<u8> {
     let event_type = u16::from_ne_bytes([bytes[offset], bytes[offset + 1]]);
     let code = u16::from_ne_bytes([bytes[offset + 2], bytes[offset + 3]]);
     let value = i32::from_ne_bytes(bytes[offset + 4..offset + 8].try_into().ok()?);
-    if event_type != 1 || value != 1 {
-        return None;
-    }
+    (event_type == 1 && value == 1).then_some(code)
+}
+
+/// Return an addressable Mini HID code for a single EV_KEY press.
+pub fn decode_keydown(bytes: &[u8]) -> Option<u8> {
+    let code = decode_linux_press(bytes)?;
     let hid = linux_key_to_hid(code)?;
     ADDRESSABLE_HID_CODES.contains(&hid).then_some(hid)
 }
@@ -168,8 +170,13 @@ fn spawn_reader(mut file: File, path: PathBuf, sender: Sender<InputMessage>) {
         loop {
             match file.read_exact(&mut bytes) {
                 Ok(()) => {
-                    if let Some(hid) = decode_keydown(&bytes) {
-                        if sender.send(InputMessage::Press { hid }).is_err() {
+                    if let Some(code) = decode_linux_press(&bytes) {
+                        let message = match linux_key_to_hid(code)
+                            .filter(|hid| ADDRESSABLE_HID_CODES.contains(hid)) {
+                            Some(hid) => InputMessage::Press { hid },
+                            None => InputMessage::Unmapped { linux_code: code },
+                        };
+                        if sender.send(message).is_err() {
                             return;
                         }
                     }
