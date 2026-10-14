@@ -75,7 +75,7 @@ The reader now monitors **all validated keyboard input nodes** belonging to USB 
 
 ## Status after the permission fix
 
-The owner reported that ripple works on the wired Apex Pro Mini after the dedicated udev ACL milestone. The initial `EACCES` error is retained above as historical troubleshooting context. **No claim has yet been made that the optional systemd background service has been enabled or tested.**
+The owner reported that ripple works on the wired Apex Pro Mini after the dedicated udev ACL milestone. The initial `EACCES` error is retained above as historical troubleshooting context. **Subsequent owner status confirmed the optional user service was installed, explicitly enabled and running for 4m42s**. This confirms it starts correctly and discovers the device/input nodes, not yet whether visual ripples trigger while daemonized or whether stop/reconnect/login behavior is reliable.
 
 ## Run ripple manually
 
@@ -108,6 +108,25 @@ systemctl --user restart apex-mini-ripple.service
 ```
 
 No typed strings are stored or logged by the daemon. Numeric Linux input key codes are mapped to HID usages and kept only for the transient animation.
+
+## First confirmed background service status (Oct 13, 2026)
+
+After running `bash scripts/install-user-service.sh` and `systemctl --user enable --now apex-mini-ripple.service`, the owner showed:
+
+- `Loaded: loaded`, `enabled`, `Active: active (running)` for **4 minutes 42 seconds**, under `user@1000.service`; main PID **561326**.
+- `/dev/hidraw7` selected as the vendor control interface with **513-byte Feature** and **65-byte Output** report.
+- `Monitoring 2 verified Mini evdev reader(s)`; no startup errors.
+- 768 KB RSS shown in service status (2.7 MB peak). These are one-time observed metrics, not promises.
+
+**Pending:** press keyboard keys and confirm visual ripple *while the service runs*. Then verify `systemctl --user stop apex-mini-ripple.service` returns to onboard lighting, restart resumes input monitoring, and service survives login/logout and a keyboard disconnect/reconnect. Do not run a second manual ripple instance while the systemd service controls lighting; first stop the service to avoid competing HID writes.
+
+```bash
+systemctl --user status apex-mini-ripple.service
+# Test keypresses physically with the service already running.
+# If the ripple is visible, optionally test restoration and restart:
+systemctl --user stop apex-mini-ripple.service
+systemctl --user start apex-mini-ripple.service
+```
 
 ## Troubleshooting
 
