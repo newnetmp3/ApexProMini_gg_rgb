@@ -8,6 +8,7 @@
 //! Simultaneous multi-key effects are the next verification milestone.
 
 pub mod effects;
+pub mod profile;
 #[cfg(target_os = "linux")]
 pub mod input;
 
