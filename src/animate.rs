@@ -116,7 +116,7 @@ fn parse_args(args: &[String]) -> Result<Options, String> {
 }
 
 fn static_effect(preset: Preset) -> bool {
-    matches!(preset, Preset::Solid | Preset::Gradient | Preset::Rainbow)
+    matches!(preset, Preset::Solid | Preset::Gradient)
 }
 
 fn run_animation(options: Options) -> Result<(), String> {
