@@ -23,6 +23,24 @@ fn esc(text: &str) -> String {
         .replace('"', "&quot;").replace('\'', "&apos;")
 }
 
+/// Keep reactive snapshots proportional to the source trigger lifetime.
+/// A 1250ms Single Key should not be previewed only at 30–180ms, and a
+/// 250ms ripple must show its propagation before its source period ends.
+fn preview_time(index: u8, phase: usize) -> f32 {
+    let spec = &factory::PRESETS[index as usize];
+    if factory::is_reactive(index) {
+        if spec.period_ms == 0 {
+            [0.03, 0.6, 1.5][phase]
+        } else {
+            spec.period_ms as f32 / 1000.0 * [0.08, 0.4, 0.8][phase]
+        }
+    } else if spec.period_ms > 0 {
+        spec.period_ms as f32 / 1000.0 * [0.0, 0.33, 0.67][phase]
+    } else {
+        0.0
+    }
+}
+
 /// Generate a static gallery with three effect phases per historical selector.
 /// Reactive presets receive SYNTHETIC key A events; no input device is opened.
 pub fn build_svg() -> String {
@@ -55,13 +73,7 @@ pub fn build_svg() -> String {
             if factory::is_reactive(index as u8) { "keypress-based" } else { "base/idle" },
             spec.variants_in_source, spec.period_ms);
         for phase in 0..3 {
-            let time = if factory::is_reactive(index as u8) {
-                [0.03, 0.09, 0.18][phase]
-            } else if spec.period_ms > 0 {
-                spec.period_ms as f32 / 1000.0 * [0.0, 0.33, 0.67][phase]
-            } else {
-                0.0
-            };
+            let time = preview_time(index as u8, phase);
             let hit = [KeyHit { hid: 4, when: 0.0 }];
             let hits: &[KeyHit] = if factory::is_reactive(index as u8) {
                 &hit
@@ -138,6 +150,17 @@ mod tests {
         assert!(svg.contains("gg:redPulse"));
         assert!(svg.ends_with("</svg>\n"));
     }
+    #[test]
+    fn reactive_previews_scale_to_factory_trigger_period() {
+        let ripple = factory::find("gg:reactiveRipple").unwrap();
+        let line = factory::find("gg:reactiveLine").unwrap();
+        let single = factory::find("gg:reactiveSingleKey").unwrap();
+        assert!((preview_time(ripple, 2) - 0.2).abs() < 1e-6);
+        assert!((preview_time(line, 2) - 0.4).abs() < 1e-6);
+        assert!((preview_time(single, 2) - 1.0).abs() < 1e-6);
+        assert!(preview_time(single, 2) > preview_time(ripple, 2));
+    }
+
     #[test]
     fn svg_escapes_user_content() {
         assert_eq!(esc("<test & hi>"), "&lt;test &amp; hi&gt;");
