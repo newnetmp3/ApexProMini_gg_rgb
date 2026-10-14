@@ -34,9 +34,17 @@ These are **our provisional descriptive effect names**, not assertions about GG'
 
 The approximate US-60% spatial layout presently used for position-dependent effects covers all 68 logical HID entries (including international variants). Accurate physical coordinates, legends, and region layouts still need visual validation.
 
+## Factory preset conversion (source-derived, not visually certified)
+
+The source data was recovered from the owner's GG 108.3 Prism SQL migrations and independently summarized into **30 complete graphics definitions**. A later GG106 migration **renames** the pre-existing `faze` record to `redPulse`; these are 31 *historical display keys*, not 31 simultaneously distinct factory effects.
+
+**All 31 identifiers are now selectable via `gg:<name>`**, including `gg:prism`, `gg:comet`, `gg:aqua`, `gg:reactiveRipple`, and `gg:redPulse`. Independent Rust rendering uses the historic palette, time, signed wavelength and geometry class from a representative variant; all 68-key packets pass offline tests. A further 36 regional variants are selected by approximate source-row and sparse-column masks, pending device geometry QA. The new idle + reactive compositor allows independent base / inactivity / keypress overlays, and the old ripple profile remains backward compatible.
+
+**Parity is incomplete:** **36 extra regional variants now source-parameterized but physically uncalibrated**, actual GG foreground/background/aperture compositor, reactive/heatmap thresholds, and device-side visual matching. Neither working preview nor compile success constitutes a verified vendor preset port. [Detailed engineering audit](FACTORY_PRESETS.md).
+
 ## Native GUI foundation
 
-The first `apex-mini-gui` (Rust eframe/egui) editor exposes fourteen native renderer prototypes (original nine, plus comet, mirrored rainbow, prismatic sweep, keypress heatmap, and reactive line), a simulated keyboard-map preview, validated color/timing controls, and static overrides painted onto individual keys. It controls the **single already-working systemd user daemon** through a saved per-user profile, never writing HID concurrently. A 31-identifier historical GG preset catalog is visible in the GUI **as unimplemented or prototype-only**, not as 31 falsely working effects.
+The first `apex-mini-gui` (Rust eframe/egui) editor exposes fourteen native renderer prototypes (original nine, plus comet, mirrored rainbow, prismatic sweep, keypress heatmap, and reactive line), a simulated keyboard-map preview, validated color/timing controls, and static overrides painted onto individual keys. It controls the **single already-working systemd user daemon** through a saved per-user profile, never writing HID concurrently. A 31-identifier historical GG preset catalog is visible in the GUI **as parameter-derived, not parity-certified factory-style previews**, not as 31 finished GG equivalents.
 
 **Pending on-device QA:** desktop rendering on KDE Wayland, applying edited profile and per-key override, persistence, actual animated effects, service stop/restoration. Only `solid` and `ripple` have prior hardware confirmation, separate from the new GUI.
 
@@ -46,43 +54,43 @@ The first `apex-mini-gui` (Rust eframe/egui) editor exposes fourteen native rend
 
 | Official preset identifier suffix | Catalog mode | Native coverage |
 |---|---|---|
-| aqua | Base / idle | Not matched |
-| chasingGhosts | Base / idle | Not matched |
-| clown | Base / idle | Not matched |
-| colorFusion | Base / idle | Not matched |
-| comet | Base / idle | Native comet **prototype**, exact GG behavior not matched |
-| disabled | Base / idle | Not matched |
-| discoMode | Base / idle; bitmap flag | Not matched |
-| drain | Base / idle | Not matched |
-| faze | Base / idle | Not matched |
-| freeway | Base / idle | Not matched |
-| haze | Base / idle | Not matched |
-| heatmap | Base / idle | Native keypress heatmap **prototype**, exact GG behavior not matched |
-| pride | Base / idle | Not matched |
-| prism | Base / idle | Native prismatic sweep **prototype**, exact GG behavior not matched |
-| radioactive | Base / idle | Not matched |
-| rainbow | Base / idle; bitmap flag | Generic rainbow prototype only; **not a parity match** |
-| rainbowSplit | Base / idle | Native mirrored rainbow **prototype**, exact GG behavior not matched |
-| reactiveLine | Reactive | Native reactive-line **prototype**, exact GG behavior not matched |
-| reactiveRipple | Reactive | Native keypress ripple **hardware-confirmed**, but official preset parameters and fidelity **not yet matched** |
-| reactiveSingleKey | Reactive | Generic reactive prototype only; **not a parity match** |
-| redPulse | Needs version-specific inspection | Not matched |
-| selfDestruct | Base / idle | Not matched |
-| shavedIce | Base / idle | Not matched |
-| solar | Base / idle | Not matched |
-| staticFade | Base / idle | Not matched |
-| steelseriesOrange | Base / idle | Not matched |
-| twilight | Base / idle | Not matched |
-| vaporDreams | Base / idle | Not matched |
-| wabashAndLake | Needs version-specific inspection | Not matched |
-| warpDrive | Base / idle | Not matched |
-| westCoast | Base / idle | Not matched |
+| aqua | Base / idle | **Parameter-derived `gg:aqua` preview available**; full GG parity unverified, regional physical alignment pending |
+| chasingGhosts | Base / idle | **Parameter-derived `gg:chasingGhosts` preview available**; full GG parity unverified |
+| clown | Base / idle | **Parameter-derived `gg:clown` preview available**; full GG parity unverified |
+| colorFusion | Base / idle | **Parameter-derived `gg:colorFusion` preview available**; full GG parity unverified, regional variants pending |
+| comet | Base / idle | **Parameter-derived `gg:comet` preview available**; full GG parity unverified, regional variants pending |
+| disabled | Base / idle | **Parameter-derived `gg:disabled` preview available**; full GG parity unverified |
+| discoMode | Base / idle; bitmap flag | **Parameter-derived `gg:discoMode` preview available**; full GG parity unverified |
+| drain | Base / idle | **Parameter-derived `gg:drain` preview available**; full GG parity unverified |
+| faze | Base / idle | **Parameter-derived `gg:faze` preview available**; full GG parity unverified |
+| freeway | Base / idle | **Parameter-derived `gg:freeway` preview available**; full GG parity unverified, regional variants pending |
+| haze | Base / idle | **Parameter-derived `gg:haze` preview available**; full GG parity unverified |
+| heatmap | Base / idle | **Parameter-derived `gg:heatmap` preview available**; full GG parity unverified |
+| pride | Base / idle | **Parameter-derived `gg:pride` preview available**; full GG parity unverified, regional variants pending |
+| prism | Base / idle | **Parameter-derived `gg:prism` preview available**; full GG parity unverified |
+| radioactive | Base / idle | **Parameter-derived `gg:radioactive` preview available**; full GG parity unverified |
+| rainbow | Base / idle; bitmap flag | **Parameter-derived `gg:rainbow` preview available**; full GG parity unverified, regional variants pending |
+| rainbowSplit | Base / idle | **Parameter-derived `gg:rainbowSplit` preview available**; full GG parity unverified |
+| reactiveLine | Reactive | **Parameter-derived `gg:reactiveLine` preview available**; full GG parity unverified |
+| reactiveRipple | Reactive | **Parameter-derived `gg:reactiveRipple` preview available**; full GG parity unverified |
+| reactiveSingleKey | Reactive | **Parameter-derived `gg:reactiveSingleKey` preview available**; full GG parity unverified |
+| redPulse | Needs version-specific inspection | **Parameter-derived `gg:redPulse` preview available**; full GG parity unverified, later rename of faze |
+| selfDestruct | Base / idle | **Parameter-derived `gg:selfDestruct` preview available**; full GG parity unverified |
+| shavedIce | Base / idle | **Parameter-derived `gg:shavedIce` preview available**; full GG parity unverified |
+| solar | Base / idle | **Parameter-derived `gg:solar` preview available**; full GG parity unverified |
+| staticFade | Base / idle | **Parameter-derived `gg:staticFade` preview available**; full GG parity unverified |
+| steelseriesOrange | Base / idle | **Parameter-derived `gg:steelseriesOrange` preview available**; full GG parity unverified |
+| twilight | Base / idle | **Parameter-derived `gg:twilight` preview available**; full GG parity unverified, regional variants pending |
+| vaporDreams | Base / idle | **Parameter-derived `gg:vaporDreams` preview available**; full GG parity unverified |
+| wabashAndLake | Needs version-specific inspection | **Parameter-derived `gg:wabashAndLake` preview available**; full GG parity unverified, regional variants pending |
+| warpDrive | Base / idle | **Parameter-derived `gg:warpDrive` preview available**; full GG parity unverified |
+| westCoast | Base / idle | **Parameter-derived `gg:westCoast` preview available**; full GG parity unverified |
 
 The three **reactive** identifiers are especially important for keypress-triggered lighting. The native ripple infrastructure now works after the device-only udev access fix, but this is not proof of official preset parity. Our first `ripple` and `reactive` implementations are infrastructure to reach them; we should replicate the official preset's timing, color, origin and propagation from its authorized local configuration data instead of treating generic effects as finished ports.
 
 ### Acceptance rules for each official preset
 
-A preset is **complete** only when its vendor-defined name, palette, gradient stops, animation phase/speed, spatial layout, device key coverage, idle/reactive layering, and expected hardware output are documented and compared to GG behavior on the Mini. The initial fourteen native renderer names do **not** increase official-parity completion automatically.
+A preset is **complete** only when its vendor-defined name, palette, gradient stops, animation phase/speed, spatial layout, device key coverage, idle/reactive layering, and expected hardware output are documented and compared to GG behavior on the Mini. The fourteen independent native modes and 31 historical parameter-derived preview selectors do **not** increase the count of exact vendor-parity completions without per-preset verification.
 
 ## Roadmap to faithful GG default preset parity
 

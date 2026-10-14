@@ -80,3 +80,9 @@ The RGB daemon still requires the user-approved `udev/71-apex-pro-mini-input.rul
 - Implement layered base / idle / reactive profiles, zones, overlays, and physical keyboard layout precision.
 - Faithfully reproduce vendor gradients, color stops, wave/ripple speeds and heatmaps using side-by-side hardware review.
 - Expand the GUI with separate preset library, profile management and per-key brush tools as those engine components land.
+
+## Remote-development factory preset milestone
+
+All 31 historical GG Prism locale identifiers are independently renderable as **`gg:<name>` factory-style previews**, using source-derived palette/time/geometry summaries. The GUI's factory list is selectable, and the base/idle/reactive layer controls can combine them through the profile-aware daemon. Source data includes 30 complete records plus the later redPulse/faze rename.
+
+**The user is currently remote:** keep GUI/physical Mini QA deferred, and prioritize offline rendering tests and regional variant fidelity. Do not imply the graphical UI has been tested by the owner or that the new factory-style effects are exact GG matches. For development evidence, run `cargo test --all-targets` and `cargo check --features gui --bin apex-mini-gui`. See [FACTORY_PRESETS.md](FACTORY_PRESETS.md).

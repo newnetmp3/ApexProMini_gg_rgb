@@ -4,6 +4,7 @@
 **Repository:** https://github.com/newnetmp3/ApexProMini_gg_rgb  
 **Latest merged milestone:** [PR #8](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/8), squash SHA `b53923e1228a7af9da0c3f5c226e1f402b8b7705`, documenting owner-verified active/enabled systemd user daemon with two Mini evdev readers. Rust and Python PR checks passed. **Owner's subsequent report: “IT WORKS!” in response to the ripple retest. Keypress-triggered ripple is now hardware-confirmed.** **The owner has now installed, enabled, and observed the systemd user service active and running for 4m42s** (user@1000; PID 561326); it detected the correct `0xffc0` 513-byte Feature/65-byte Output interface and started two Mini evdev readers. **User explicitly confirmed that keypress ripple works with the systemd service running**. Login persistence, physical USB reconnect, and clean stop/clear are separate outstanding QA gates.  
 **Latest merged development milestone:** [PR #9](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/9), squash SHA `edf7e45a8082a87b6ebf3e5119afc96f30684248`. The native Rust desktop GUI, 14-effect prototype engine, strict saved profiles/per-key overrides and profile-aware single-writer systemd service are on `main`. **GUI compile, Rust tests/Clippy and Python CI passed; owner's KDE GUI/edited-profile hardware acceptance is still pending.**  
+**Current development branch:** `feature/prism-factory-presets-dataset`. Owner is remote, so **defer GUI/hardware QA** and concentrate on factory preset conversion. Actual GG 108.3 Prism SQL migrations were recovered offline. We found **30 complete source definitions**, and GG 106's `redPulse` name is a rename of existing `faze`. `src/factory.rs` implements all **31 historical identifiers as parameter-derived renderable previews**, not 31 equivalent vendor algorithms. A new `src/layers.rs` base/idle/reactive compositor and backward-compatible profile extensions are integrated with the daemon and GUI. **Hardware acceptance for these new factory modes is pending**. See `docs/FACTORY_PRESETS.md`.  
 **Hardware:** Wired SteelSeries Apex Pro Mini `1038:161e`; owner runs Arch Linux, KDE Wayland.
 
 ## Verified milestones
@@ -21,6 +22,8 @@
 9. **Background service installation/start verified from systemd owner output (Oct 13, 2026, 23:14 EDT):** `apex-mini-ripple.service` is **loaded, enabled, active (running)** under `/user.slice/user-1000.slice/user@1000.service` with executable `%h/.local/bin/apex-mini-rgb`; uptime ~4m42s, 768 KB RAM (2.7 MB peak), two active Mini evdev readers and the expected 513-byte Feature / 65-byte Output reports on `/dev/hidraw7`. No startup error appears in the supplied logs. **This is service-liveness evidence, not separate confirmation of visible ripple while running via systemd.** Device node numbers are temporary.
 
 10. **Background ripple hardware-confirmed in user daemon:** owner explicitly answered **“yes”** when asked whether pressing keys causes visible ripples while `apex-mini-ripple.service` is running. Combined with the earlier systemd status, this verifies service-owned keypress-reactive RGB (not only manual CLI). No reboot/unplug or stop/clear lifecycle test has been supplied yet.
+
+11. **2026-10-14 factory catalog conversion (branch, CI pending):** parsed GG's Prism migration resources privately; **30 actual preset records** plus one newer `redPulse` rename (`faze`). Independent Rust factory interpreter includes authentic first-variant functional RGB palette stops, animation durations, signed spatial wavelength and phase category for all 31 historical identifiers, plus 68-key rendering tests. **Not a full copy of the vendor effects engine:** eight records have **36 additional masked layout variants now implemented as approximate row/column selections**; several records have backgrounds/apertures that are still not modeled faithfully. Added pure `base + idle + reactive` compositor and `version=1` profile fields without changing the Mini HID writer or the earlier default ripple behavior.
 
 ## Safety: do not conflate these conditions
 
@@ -56,13 +59,14 @@
 - **Known parity gap:** 31 SteelSeries GG migration preset identifiers are indexed and fourteen native algorithms exist, but most factory parameters and effects are not yet faithfully reproduced. Native presets are independent prototypes, not a faithful port yet.
 - **Verification:** **PR #9 GitHub Actions passed** for headless Rust unit tests + Clippy, optional Linux/Wayland/X11 GUI compile, and Python diagnostics. Owner must still validate actual Plasma window and profile application on real hardware.
 
-## Immediate next work
+## Immediate next work — effects only while owner is remote
 
-1. **PR #9 merged and CI green:** GUI compiled under Linux/Wayland/X11 and headless Rust tests/Clippy/Python diagnostics passed. No GUI hardware acceptance yet.
-2. Ask owner to pull and run `bash scripts/install-gui.sh`. It updates the profile-aware user service while leaving the existing instance alone. Launch **Apex Mini Prism** from KDE or run `~/.local/bin/apex-mini-gui`.
-3. Owner tests GUI **Save** (no hardware change), **Apply & restart** (single-writer systemd), solid colors, animated effects, per-key overrides, and ripple; confirm no regressions.
-4. Verify service `Stop` restores onboard lighting, re-enabling profile works, saved settings survive login, and later physical USB disconnect/reconnect.
-5. Start the systematic full Prism default preset port: recover exact authorized GG preset configs for all 31 historical identifiers, add real renderer/layer behavior and corresponding GUI edit controls, and test each against actual hardware. Never mark a guessed analogue as faithful.
+1. Verify `feature/prism-factory-presets-dataset` CI (Rust unit tests, Clippy, GUI compile, Python) and merge PR only when green; update both rolling docs with actual PR and SHA.
+2. **36 source-derived alternate region variants are now implemented** for the eight known multi-variant presets. Next, calibrate the six-row Prism source coordinate masks to the Mini's five physical rows and HID keys. Existing selection is approximate; do not claim exact variant fidelity.
+3. Implement more of GG's graphics compositor features (foreground/background/aperture, opacity, z order, repetitions, origins) from independent model descriptions, avoiding published proprietary JSON.
+4. Extend exact reactive trigger/wave envelopes; the five original heatmap analog color bands are now mapped in an offline-tested utility, but actual Hall-actuation readings are not available through evdev. Confirm responsiveness and retain **no keystroke logging**.
+5. Preserve existing working daemon and `--effect ripple` defaults. Save physical GUI/per-key effects validation for when owner returns to the keyboard.
+6. Continue `docs/FACTORY_PRESETS.md` acceptance matrix until every currently shipped GG preset is behaviorally compared. 31 historical *names* is not 31 verified factory equivalents.
 
 ## Latest merged permission fix — PR #6, active-seat Mini-only udev rule
 
@@ -111,6 +115,10 @@
 
 - **2026-10-13 user daemon validation:** Owner confirmed visible keypress ripple while the enabled systemd user service was running, resolving the separate daemon-animation acceptance gate. Reconnect/logout/stop not yet tested.
 - **2026-10-14 PR [#9](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/9):** Native eframe/egui GUI, 14 independent effect modes, per-key RGB paint overrides, validated on-disk profile and profile-aware single-writer daemon. Linux GUI compile + Rust tests/Clippy + Python CI passed. Squash SHA `edf7e45a8082a87b6ebf3e5119afc96f30684248`. GUI/runtime **hardware acceptance is pending**.
+
+- **2026-10-14 factory conversion (in progress, branch `feature/prism-factory-presets-dataset`):** recovered the 30 complete Prism preset records and the GG106 redPulse/faze rename; authored 31 historical selectors (`gg:<name>`), local palette/timing previews and a pure layered compositor. CI and merge pending. No owner's live keyboard available for these newly added effects.
+
+- **2026-10-14 regional preset stage (pending PR):** Added `src/regions.rs` with 36 additional masked source variants from the owner's GG 108.3 migrations. Factory rendering now selects by approximate Mini row/column and falls back to unmasked base. Exact position calibration and vendor layer compositing remain pending.
 
 ## Rolling documentation convention
 
