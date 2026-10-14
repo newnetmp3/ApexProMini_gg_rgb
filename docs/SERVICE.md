@@ -8,6 +8,57 @@ The owner reported that **whole-keyboard static blue works** but **no keypress r
 
 This milestone introduces multi-source detection, a diagnostic command, validated evdev parsing, and a user service. **The actual fix must be verified against keypresses on the owner's Mini**; do not claim working ripple until confirmed.
 
+## Confirmed blocker on owner's Arch PC: permission denied (2026-10-14)
+
+After PR #5, the owner ran `--list-inputs` and `--test-input --seconds 10`. The exact result was:
+
+```text
+/dev/input/event11 [no read access]
+/dev/input/event12 [no read access]
+Permission denied (os error 13)
+```
+
+This **confirms the immediate blocker is the local Linux input event permissions**, not lack of detected keyboard nodes or failure of the 513-byte RGB command. Ripple has **not yet been observed working** after a permission fix.
+
+### Install the device-specific ACL rule (explicit opt-in)
+
+The project includes `udev/71-apex-pro-mini-input.rules`, which matches **only** input `event*` keyboard devices attached to wired SteelSeries Apex Pro Mini USB `1038:161e`, then applies `TAG+="uaccess"` and `MODE="0660"`. The `71-` prefix deliberately runs before systemd's `73-seat-late.rules`. On an active local KDE/Wayland seat, logind should grant a temporary access-control-list entry to the active user. No system-wide `input` group membership, no root daemon, and no `chmod 666` needed.
+
+```bash
+cd ~/local-git/ApexProMini_gg_rgb
+git pull --ff-only
+bash scripts/install-input-permissions.sh
+```
+
+The script uses `sudo` **only to copy this exact udev rule** to `/etc/udev/rules.d/71-apex-pro-mini-input.rules` and reload udev rules. It does not enable, install or start the lighting service. **Disconnect and reconnect the Mini** after installation to re-enumerate event nodes and reapply ACLs. On a machine where this is the only input keyboard, ensure you can reconnect before unplugging.
+
+Verify using the **new** event node numbers (they may differ from `event11` and `event12`):
+
+```bash
+./target/release/apex-mini-rgb --list-inputs
+./target/release/apex-mini-rgb --test-input --seconds 10
+```
+
+During the 10 seconds, press A, S and Space: expected USB HID usages `4`, `22`, `44`. **Do not type passwords or sensitive text** during this explicitly requested key event diagnostic. Once events work, opt in to a manual ripple test before enabling the service.
+
+If the devices still report no access, inspect the **current** paths:
+
+```bash
+udevadm info --query=property --name=/dev/input/event11 | grep -E '^(ID_INPUT_KEYBOARD|TAGS|CURRENT_TAGS|ID_VENDOR_ID|ID_MODEL_ID)='
+getfacl -- /dev/input/event11
+loginctl session-status
+```
+
+Replace `event11` with a path returned by `--list-inputs`. Check whether `uaccess` is present among the udev tags, whether your logged-in UID has an `rw-` ACL, and whether your graphical session is active on a local seat. If `ID_INPUT_KEYBOARD` is not `1`, the rule may need a justified device-specific adjustment. Do not blanket-change input permissions.
+
+To uninstall the custom ACL rule:
+
+```bash
+sudo rm /etc/udev/rules.d/71-apex-pro-mini-input.rules
+sudo udevadm control --reload-rules
+# Reconnect keyboard to apply the change to newly enumerated nodes.
+```
+
 ## Read-only diagnosis (first)
 
 ```bash
