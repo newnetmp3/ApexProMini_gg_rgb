@@ -2,55 +2,48 @@
 
 **Updated:** 2026-10-14  
 **Repository:** https://github.com/newnetmp3/ApexProMini_gg_rgb  
-**Integration status:** PR [#1](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/1) merged to `main` (squash commit `5364b999ab4439f9d52f03b856aa8587c9f7fafb`). GitHub Actions `python-tests` passed, including syntax validation and four hardware-free tests. Always recheck the current branch before continuing.  
-**Target:** Wired SteelSeries Apex Pro Mini, VID:PID `1038:161e` on Arch Linux / KDE Plasma / Wayland. This repo is independent from upstream `Ven0m0/steelseriesgg-rs`.
+**Working branch:** `feature/mini-official-rgb-codec` (PR pending). Latest merged work: PR #1, main SHA `67a67146b4cb`.  
+**Hardware:** Wired SteelSeries Apex Pro Mini `1038:161e`; owner runs Arch Linux, KDE Wayland.
 
-## Goal
+## Verified milestones
 
-Create a native Linux/Rust implementation for **verified** Apex Pro Mini RGB and, subsequently, profiles, per-key illumination, actuation, rapid trigger, and remapping. Use official SteelSeries GG as a protocol research reference, not as code to redistribute.
+1. USB control interface 1, HID page `0xffc0`, usage `1`; read-only Linux descriptor probe verifies report ID `0`, 65-byte Output and 513-byte Feature reports. `/dev/hidrawN` is not stable.
+2. Existing upstream `steelseriesgg-rs` generic HID issue: extra zero report-ID and deduplicated APPLY fixed with a local patch. The owner confirmed 3/3 transport writes but **no physical LED change**. PID `161e` still falls back to generic one-zone RGB there.
+3. GG 108.3 macOS and 121.0 Windows installers were supplied privately, along with extracted Windows `SteelSeriesEngine.exe`. Using the independently researched `steelpatcher` technique, passphrase extraction succeeded and encrypted Mini device definitions decrypted. Proprietary assets and secrets stay out of Git.
+4. **New 2026-10-14 milestone:** extracted and decrypted inherited `base_apex_2022_wired.edevice` and `individually-lit-keyboard.edevice` from the owner's Mac package. Discovered official `direct_write` structure: Feature report of **513 bytes**, `00 40 NN` followed by up to **68 entries** of `[HID,R,G,B]`. The official fixed field has 68 entries; `clear_direct_write` is Output report of **65 bytes**, prefix `00 41`. RGB commands are now derived from official static definitions, not guessed.
+5. Added independent Rust crate `apex-pro-mini-gg-rgb`, with pure serializers, strict HID descriptor and device checks, golden-byte unit tests, and executable `apex-mini-rgb`. The binary defaults to read-only inspection; `--dry-run` never opens a device; live `--write-key` and `--clear` require literal `--confirm-device-write`.
+6. **No hardware command has yet been tested from this new crate**. Source and public docs contain no proprietary GG files.
 
-## Confirmed owner-hardware evidence
+## Safety: do not conflate these conditions
 
-- Connected Mini exposes control interface 1, usage page `0xFFC0`, usage `0x01`, with `/dev/hidraw7` on the latest observed session (device number may change).
-- Kernel descriptor reports **Output 65 bytes**, **Feature 513 bytes**, both report ID 0. These are hardware-observed values.
-- `ssgg` `0.1.5` opens the correct interface and submits HID writes without permission errors.
-- The local `patches/steelseriesgg-rs-hid-report-fix.patch` fixed a duplicate report ID and a skipped APPLY report. The owner confirmed logs after applying it: correctly framed `00 21 FF FF 00 00...` and 3/3 writes successful. **Keyboard lighting did not change.** USB success != accepted Mini RGB protocol.
-- Current upstream routing for PID `161e` is `GenericKeyboard` with no dedicated key map or zone map.
-- **Do not send** the 645-byte Apex Pro TKL 2023 RGB feature packet to the Mini; its advertised maximum feature report is 513 bytes.
+- **Statically verified:** command `0x40` / `0x41` report formats, key slot count and HID report types.
+- **Hardware observed:** correct endpoint/report lengths; generic `0x21` does not change Mini RGB.
+- **Unverified:** whether directly sending the spec-derived `0x40` command changes visible LEDs, and any session initialization, profile or timing requirements. Do not mark milestone 6 complete until owner reports actual illumination.
 
-## Official GG static research completed
+## Current contents
 
-- Input packages: macOS GG 108.3.0 `.pkg`, Windows GG 121.0.0 setup `.exe`, and Windows `SteelSeriesEngine.exe` provided privately.
-- macOS Engine Core includes `apex_pro_mini.edevice`, `base_apex_2022_mini_layout_lighting.edevice`, `apex_pro_mini.migration`, and firmware metadata identifying wired Mini firmware 1.19.7.
-- Independent [steelpatcher](https://github.com/hurryman2212/steelpatcher) reverse-engineering work provided a password-extraction algorithm for Windows Engine. **That extraction succeeded** on supplied Windows Engine, and **both .edevice specifications decrypted successfully** using the resulting password. The password and decrypted vendor files remain private and are not committed.
-- Official decrypted Mini spec independently confirms usage `0xFFC0`, feature size **513** bytes, a **70-position** firmware key-index table with **68 nonzero HID mappings**, shared Mini lighting definitions, and firmware-version-aware profile schemas (3–6). This is static reference data only.
-- Shared lighting spec calls high-level Engine APIs `direct_write` / `clear_direct_write`, but their final HID packet serializer and command bytes are **not yet established**. A high-level API name is not a device command byte.
+- `src/lib.rs`: no-IO Rust packet encoding and report descriptor parser with tests.
+- `src/main.rs`: guarded Linux discovery, opt-in direct write/clear and dry run.
+- `Cargo.toml`, `.github/workflows/rust.yml`: zero-external-dependency Rust build/tests/Clippy.
+- `tools/hid_probe.py` + `tests/test_hid_probe.py`: original read-only Python probe.
+- `tools/decrypt_descriptor_local.py`: private-only wrapper around independent steelpatcher parser.
+- `docs/PROTOCOL.md`: verified static RGB serializer and execution instructions.
+- `docs/SETUP.md`: Arch setup and safe test steps.
+- `.gitignore`: vendor binaries, decrypted descriptors, captures, firmware and credentials excluded.
+- `patches/steelseriesgg-rs-hid-report-fix.patch`: earlier locally verified upstream transport patch.
 
-## Current repository contents
+## Immediate next work
 
-- `docs/RESEARCH.md` — official asset inventory and reproducible evidence without vendor plaintext.
-- `docs/PROTOCOL.md` — confirmed transport facts and unknown wire encoding.
-- `tools/hid_probe.py` — safe read-only HID report inventory; runs without external packages.
-- `tools/decrypt_descriptor_local.py` — opt-in local-only wrapper around steelpatcher code; does not print or store the passphrase.
-- `patches/steelseriesgg-rs-hid-report-fix.patch` — previously hardware-log-verified upstream transport fix; applied locally by owner to separate upstream checkout.
-- `tests/test_hid_probe.py` — synthetic HID descriptor parsing tests.
-- `.gitignore` — excludes vendor binaries, plaintext specs, captured traces, and all `.private/` content.
+1. Verify Rust CI builds, unit tests and Clippy, and resolve failures before merge. Formatting check desirable.
+2. Merge feature PR after green CI. Update both rolling docs to final PR/SHA status.
+3. Have owner clone/pull and run **read-only** `cargo run --` then `cargo run -- --dry-run A ff0000`.
+4. With owner's agreement, test `cargo run --release -- --write-key A ff0000 --confirm-device-write` and immediately `cargo run --release -- --clear --confirm-device-write`, reporting visible changes (not just USB success).
+5. If real RGB works, expand to multiple keys/colors, then improve integration into `steelseriesgg-rs`. If no visible change, investigate GG session initialization/capture and firmware state; never fuzz random commands.
 
-## Next engineering tasks
+## Rolling documentation convention
 
-1. **Locate actual RGB HID API implementation** (e.g., definitions behind `direct_write`, inherited `individually-lit-keyboard`, and `base_apex_2022_wired`). Obtain permitted local copies of inherited includes from own installer, or derive command packets from verified captures; do not infer packet bytes from API names.
-2. Design an independent Rust packet serializer with unit tests against verified report bytes (65-byte output versus 513-byte feature distinguished).
-3. Provide an opt-in static red/green/blue test that verifies exact VID/PID and report sizes before any write. No broad command scanning, flashing, macros, or actuation testing.
-4. Test real key lighting and per-key order on owner's Mini; document results and regressions. Only then mark RGB supported.
-5. Expand to Prism effects and profiles, then separately validate actuation/rapid trigger.
+For each substantial code/research milestone: inspect actual repository state; implement and test; update this file and `docs/ROADMAP.md` in the same PR or commit. Include date, branch, exact verified results, tests and next step. Avoid claiming success based on speculative software/hardware behavior.
 
-## Verification history
+**Continuation prompt:**
 
-- 2026-10-14: Initial repository, research docs, original read-only probe, local-only decryption helper, test suite and transport patch merged via PR #1. GitHub Actions test job succeeded. **No Mini RGB device write has been implemented or hardware-verified in this repository.**
-- Next task: recover the actual `direct_write` HID frame serializer from the privately decrypted Mini descriptor's inherited includes and/or verified official GG RGB traces. Build a safe independent Rust codec only after exact bytes are established.
-
-## Rolling-handover process
-
-At the end of **every meaningful milestone**, update **this file** and `docs/ROADMAP.md` in the same PR/commit as the code and tests. Include: date, branch/commit/PR, verified behavior versus hypothesis, tests run, remaining problems, next concrete steps. Do not write an unverified feature as completed. Next chat handover instruction:
-
-> Continue `newnetmp3/ApexProMini_gg_rgb` from `docs/HANDOVER.md` and `docs/ROADMAP.md`. Inspect the latest GitHub state, execute the next verified milestone, and update both rolling documents alongside code and tests.
+> Continue `newnetmp3/ApexProMini_gg_rgb` using `docs/HANDOVER.md` and `docs/ROADMAP.md`; inspect the GitHub repo, implement the next verified milestone, test, and update both rolling documents.
