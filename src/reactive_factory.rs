@@ -85,18 +85,23 @@ pub fn event_strength(
 /// Preserve distinct simultaneous/recent key events without making
 /// overlapping pulses overflow channels. This is intentionally an
 /// approximation, not GG's original graph blend policy.
+#[derive(Clone, Copy, Debug)]
+pub struct Target {
+    pub hid: u8,
+    pub x: f32,
+    pub y: f32,
+}
+
 pub fn intensity(
     kind: Kind,
-    hid: u8,
-    x: f32,
-    y: f32,
+    target: Target,
     seconds: f32,
     config: Config,
     period_ms: u32,
     hits: &[KeyHit],
 ) -> f32 {
     let duration = duration_seconds(period_ms, config.speed);
-    hits.iter().map(|&hit| event_strength(kind, hit, hid, x, y, seconds, duration))
+    hits.iter().map(|&hit| event_strength(kind, hit, target.hid, target.x, target.y, seconds, duration))
         .fold(0.0_f32, f32::max)
 }
 
@@ -104,9 +109,8 @@ pub fn intensity(
 /// This must cover the longest factory fade when speed=0.1 (12.5 seconds
 /// for Single Key), not the old universal 2.5s pruning window.
 /// Native ripple and other existing modes remain on the original 2.5s.
-pub fn retention_seconds(kind: Kind, period_ms: u32, speed: f32) -> f32 {
-    let _ = kind; // all three use their recovered nominal periods
-    duration_seconds(period_ms, speed).max(2.5).min(20.0)
+pub fn retention_seconds(_kind: Kind, period_ms: u32, speed: f32) -> f32 {
+    duration_seconds(period_ms, speed).clamp(2.5, 20.0)
 }
 
 #[cfg(test)]
@@ -167,8 +171,8 @@ mod tests {
         let (x, y) = crate::effects::position(4).unwrap();
         let hit1 = KeyHit { hid: 4, when: 0.0 };
         let hit2 = KeyHit { hid: 22, when: 0.02 };
-        let one = intensity(Kind::Ripple, 4, x, y, 0.05, config, 250, &[hit1]);
-        let two = intensity(Kind::Ripple, 4, x, y, 0.05, config, 250, &[hit1, hit2]);
+        let one = intensity(Kind::Ripple, Target { hid: 4, x, y }, 0.05, config, 250, &[hit1]);
+        let two = intensity(Kind::Ripple, Target { hid: 4, x, y }, 0.05, config, 250, &[hit1, hit2]);
         assert!(two >= one);
         assert!((0.0..=1.0).contains(&two));
     }
