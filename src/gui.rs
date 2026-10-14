@@ -3,16 +3,18 @@
 //! writer. Profile editing is local and application-safe by default.
 use apex_pro_mini::effects::{self, KeyHit, Preset};
 use apex_pro_mini::profile::{color_hex, default_profile_path, Profile};
-use apex_pro_mini::{Rgb, ADDRESSABLE_HID_CODES};
+use apex_pro_mini::Rgb;
 use eframe::egui::{self, Color32, FontId, Pos2, Rect, Sense, Vec2};
 use std::process::Command;
 use std::time::Instant;
 
 const SERVICE: &str = "apex-mini-ripple.service";
-const EFFECTS: [Preset; 9] = [
+const EFFECTS: [Preset; 14] = [
     Preset::Solid, Preset::Gradient, Preset::Rainbow, Preset::Wave,
     Preset::Breathing, Preset::ColorShift, Preset::Sparkle,
-    Preset::Ripple, Preset::Reactive,
+    Preset::Ripple, Preset::Reactive, Preset::Comet,
+    Preset::RainbowSplit, Preset::PrismaticSweep, Preset::Heatmap,
+    Preset::ReactiveLine,
 ];
 // Historical locale IDs extracted from GG 108.3 bundled Prism migrations.
 // NOT assertions that these exact effects are implemented or currently visible
@@ -282,7 +284,7 @@ impl eframe::App for ControlCenter {
                 egui::ScrollArea::vertical().max_height(185.0).show(ui, |ui| {
                     egui::Grid::new("catalog").striped(true).show(ui, |ui| {
                         for id in GG_IDS {
-                            let is_proto = matches!(*id, "rainbow" | "reactiveRipple" | "reactiveSingleKey");
+                            let is_proto = matches!(*id, "rainbow" | "reactiveRipple" | "reactiveSingleKey" | "comet" | "heatmap" | "rainbowSplit" | "reactiveLine" | "prism");
                             ui.monospace(*id);
                             ui.label(if is_proto { "Native prototype — parity not established" }
                                 else { "Not yet ported" });
