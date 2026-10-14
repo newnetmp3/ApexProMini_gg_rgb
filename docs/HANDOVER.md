@@ -2,7 +2,7 @@
 
 **Updated:** 2026-10-14  
 **Repository:** https://github.com/newnetmp3/ApexProMini_gg_rgb  
-**Latest merged documentation milestone:** [PR #7](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/7), squash SHA `045b0845561e222983aa9b9db79b77cc912bb7f4`, recording native ripple working on hardware following PR #6's Mini-only udev ACL. **Owner's subsequent report: “IT WORKS!” in response to the ripple retest. Keypress-triggered ripple is now hardware-confirmed.** **The owner has now installed, enabled, and observed the systemd user service active and running for 4m42s** (user@1000; PID 561326); it detected the correct `0xffc0` 513-byte Feature/65-byte Output interface and started two Mini evdev readers. **Ripple from keypresses while the service runs, login persistence, device reconnect, and SIGTERM clear still require separate observation.**  
+**Latest merged milestone:** [PR #8](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/8), squash SHA `b53923e1228a7af9da0c3f5c226e1f402b8b7705`, documenting owner-verified active/enabled systemd user daemon with two Mini evdev readers. Rust and Python PR checks passed. **Owner's subsequent report: “IT WORKS!” in response to the ripple retest. Keypress-triggered ripple is now hardware-confirmed.** **The owner has now installed, enabled, and observed the systemd user service active and running for 4m42s** (user@1000; PID 561326); it detected the correct `0xffc0` 513-byte Feature/65-byte Output interface and started two Mini evdev readers. **Ripple from keypresses while the service runs, login persistence, device reconnect, and SIGTERM clear still require separate observation.**  
 **Hardware:** Wired SteelSeries Apex Pro Mini `1038:161e`; owner runs Arch Linux, KDE Wayland.
 
 ## Verified milestones
@@ -93,6 +93,8 @@
 - **2026-10-14 PR [#7](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/7):** Recording owner-confirmed keypress ripple operation following PR #6's permissions fix. Rust, Clippy and Python PR checks passed; squash SHA `045b0845561e222983aa9b9db79b77cc912bb7f4`. Service lifecycle and exact GG preset parity remain pending.
 
 - **2026-10-13 hardware/systemd session evidence:** user installed `scripts/install-user-service.sh`, explicitly enabled the user service, and showed an active PID 561326 for 4m42s. Successful endpoint discovery and two matching Mini input readers; no startup errors in supplied status. Visible per-key animation while daemonized and service lifecycle behavior are **pending**.
+
+- **2026-10-13 PR [#8](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/8):** Recorded owner-confirmed background user daemon startup/enabled/running, stable 4m42s status and Mini input endpoints; Rust and Python checks passed. Squash SHA `b53923e1228a7af9da0c3f5c226e1f402b8b7705`. Visible ripple under the daemon, reconnect and stop-cleanup require follow-up tests.
 
 ## Rolling documentation convention
 
