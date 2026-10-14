@@ -183,7 +183,8 @@ pub fn render(index: u8, hid: u8, x: f32, y: f32, seconds: f32, config: Config, 
     }
     if let Some(kind) = crate::reactive_factory::kind_for_factory(spec.id) {
         let strength = crate::reactive_factory::intensity(
-            kind, hid, x, y, seconds, config, spec.period_ms, hits,
+            kind, crate::reactive_factory::Target { hid, x, y },
+            seconds, config, spec.period_ms, hits,
         );
         return mix(config.base, sample(spec.stops, 0.0), strength);
     }
