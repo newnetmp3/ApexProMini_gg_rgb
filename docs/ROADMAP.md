@@ -82,11 +82,11 @@ The target is **all default presets shipped by official SteelSeries GG Prism**, 
 
 ## Factory reactive source-period envelopes (development milestone)
 
-Branch `feature/prism-reactive-timing-envelopes` builds independent **GG 108.3-derived** keypress-trigger profiles: `gg:reactiveRipple` (250ms), `gg:reactiveLine` (500ms) and `gg:reactiveSingleKey` (1250ms). Nominal periods come from the historical GG migration; expanding radial/row wavefront and exact-key fade curves are **new approximations**, not reproduced GG source shaders.
+**[PR #14](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/14) merged** as `37a8ebb2363eb6715a4e7aeb956c1a0dd193cf9e` (Rust tests/Clippy, GUI compilation, Python and SVG gallery CI green). It builds independent **GG 108.3-derived** keypress-trigger profiles: `gg:reactiveRipple` (250ms), `gg:reactiveLine` (500ms) and `gg:reactiveSingleKey` (1250ms). Nominal periods come from the historical GG migration; expanding radial/row wavefront and exact-key fade curves are **new approximations**, not reproduced GG source shaders.
 
 The pure Rust engine handles separately timed overlapping events, no-press baseline, invalid/future events, exact expiry and bounded fade. The daemon and GUI now choose event-history windows appropriate for **source period × profile speed**, fixing truncation for slow Single Key while preserving original working native ripple. The offline gallery evaluates samples relative to each source trigger duration.
 
-**Acceptance:** headless Rust unit tests, strict Clippy, GUI compile, Python diagnostic tests and SVG gallery must pass before merging; physical Mini and actual vendor behavior remain untested while owner is remote. See [`docs/REACTIVE_FACTORY.md`](REACTIVE_FACTORY.md).
+**Software acceptance passed:** headless Rust unit tests, strict Clippy, GUI compile, Python diagnostic tests and SVG gallery. **Physical Mini and actual vendor behavior remain untested** while owner is remote. See [`docs/REACTIVE_FACTORY.md`](REACTIVE_FACTORY.md).
 
 **Remaining work:** source-aperture timing and shader reconstruction, exact key geometry, analog Hall input, layered priority and full side-by-side GG preset parity. This implementation does **not** establish exact vendor equivalent behavior.
 
