@@ -1,0 +1,54 @@
+diff --git a/src/devices/keyboards/mod.rs b/src/devices/keyboards/mod.rs
+--- a/src/devices/keyboards/mod.rs
++++ b/src/devices/keyboards/mod.rs
+@@ -319,3 +319,3 @@
+             diag.record_timed_operation(HidOperation::Send, data, || {
+-                write_padded_report(&device, data, 65, true)
++                write_padded_report(&device, data, 65, false)
+             })
+@@ -324,3 +324,3 @@
+         } else {
+-            write_padded_report(&device, data, 65, true)
++            write_padded_report(&device, data, 65, false)
+         };
+@@ -370,3 +370,3 @@
+                 diag.record_timed_operation(HidOperation::Send, &data, || {
+-                    write_padded_report(&device, &data, 65, true)
++                    write_padded_report(&device, &data, 65, false)
+                 })
+@@ -375,3 +375,3 @@
+             } else {
+-                write_padded_report(&device, &data, 65, true)
++                write_padded_report(&device, &data, 65, false)
+             }
+@@ -549,5 +549,4 @@
+         let mut buffer = [0u8; 65];
+         let size = self.report_builder.build_report(apply_command, &mut buffer)?;
+-        let _ = self.send_report_async(&buffer[..size]).await;
+-        Ok(())
++        self.send_report_async(&buffer[..size]).await
+     }
+diff --git a/src/devices/mod.rs b/src/devices/mod.rs
+--- a/src/devices/mod.rs
++++ b/src/devices/mod.rs
+@@ -234,3 +234,6 @@
+     // Check for duplicate reports to reduce unnecessary I/O
+-    if get_hid_optimizer().is_duplicate_report(report_data) {
++    // APPLY (0x09) is a state transition and must never be deduplicated.
++    if report_data.get(1) != Some(&0x09)
++        && get_hid_optimizer().is_duplicate_report(report_data)
++    {
+         debug!("Skipping duplicate HID report");
+@@ -252,8 +255,10 @@
+     // Perform the actual write
+     let write_result = device.write(report_data);
+ 
+-    // Update cache regardless of write success to avoid retry storms
+-    get_hid_optimizer().mark_report_sent(report_data);
++    // Only cache successful writes. A failed write must be retryable.
++    if write_result.is_ok() {
++        get_hid_optimizer().mark_report_sent(report_data);
++    }
+ 
+     write_result.map_err(Into::into).map(|_| ())
+ }
