@@ -11,7 +11,7 @@ Status as of **2026-10-14**. Completion means stated acceptance criteria have ac
 | 4. Establish Mini-specific RGB serializer | **Static specification verified** | New inherited `base_apex_2022_wired` confirms `0x40` Feature, `0x41` Output and field layouts |
 | 5. Implement independent Rust Mini codec | **Complete — PR #2** | Squash SHA `2ccb9f67d63d`; bounded frame builders, golden-byte unit tests, guarded device selection, Rust tests and Clippy green on branch |
 | 6. Verify real Mini static RGB/per-key selection | **Whole-board solid RGB hardware verified** | A red, S green, `0x41` clear restored, **all physical keys turned blue**. Different simultaneous colors and layout fidelity still pending |
-| 7. Lighting effects and Prism profiles | **Native ripple hardware-verified; GUI/profile work in progress** | Owner confirmed manual and user-service keypress ripple works. Nine native renderer prototypes available; exact GG Prism 31-preset parity and base/idle/reactive stacking incomplete |
+| 7. Lighting effects and Prism profiles | **Native ripple hardware-verified; GUI/profile work in progress** | Owner confirmed manual and user-service keypress ripple works. Fourteen native renderer prototypes available; exact GG Prism 31-preset parity and base/idle/reactive stacking incomplete |
 | 8. Read-only device state/firmware status | Not started | Real readback without altering settings |
 | 9. Actuation/Rapid Trigger/remapping | Not started | Independently verified commands and rollback |
 | 10. Package Linux service/application | **Service + live ripple hardware-verified; lifecycle QA pending** | User service enabled/active with two input readers; owner also verified visible ripples while it runs. Logon/reconnect/stop restoration and distribution packaging pending |
@@ -42,7 +42,7 @@ Status as of **2026-10-14**. Completion means stated acceptance criteria have ac
 
 ## Native GUI and profile editor milestone
 
-**In progress, branch `feature/native-prism-gui-profile-engine`:** introduce a true Wayland/X11 native Rust GUI (eframe/egui) with a 68-key RGB preview, nine native effect choices, color/brightness/speed/FPS controls, per-key RGB overrides, safe Save/Apply, user service controls and a KDE desktop launcher. Service reloads a versioned, validated, atomically saved user profile; the GUI never competes for the HID writer.
+**In progress, branch `feature/native-prism-gui-profile-engine`:** introduce a true Wayland/X11 native Rust GUI (eframe/egui) with a 68-key RGB preview, fourteen native effect choices, color/brightness/speed/FPS controls, per-key RGB overrides, safe Save/Apply, user service controls and a KDE desktop launcher. Service reloads a versioned, validated, atomically saved user profile; the GUI never competes for the HID writer.
 
 **Acceptance:** optional GUI compiles in CI; Arch/KDE GUI launches and renders; profile survives restarts; applying a new preset changes hardware, keypress ripple continues after switching, per-key override works, service stop restores onboard lighting. *Until owner tests, implementation ≠ verified behavior.*
 
