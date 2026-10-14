@@ -95,6 +95,22 @@ pub fn is_reactive(index: u8) -> bool {
     matches!(spec.id, "reactiveLine" | "reactiveRipple" | "reactiveSingleKey" | "heatmap")
 }
 
+/// GG 68-series heatmap originally consumes analog Hall-effect actuation
+/// values; the wired Mini's standard evdev interface supplies only discrete
+/// key-down/up events. This lookup captures the five source-derived functional
+/// actuation ranges but cannot be used live until an independently verified
+/// analog actuation read protocol exists. We do NOT invent HID commands.
+pub fn heatmap_color_for_actuation(value: u16) -> Rgb {
+    match value {
+        0 => from_hex(0x070070),
+        1..=950 => from_hex(0xff0000),
+        951..=1750 => from_hex(0xffff00),
+        1751..=1850 => from_hex(0x070070),
+        1851..=2950 => from_hex(0x800080),
+        _ => from_hex(0x0000ff),
+    }
+}
+
 fn from_hex(hex: u32) -> Rgb {
     Rgb {
         red: (hex >> 16) as u8,
@@ -248,6 +264,18 @@ mod tests {
                 assert_eq!(encode_direct_write(&colors).unwrap()[2], 68);
             }
         }
+    }
+
+    #[test]
+    fn original_heatmap_actuation_threshold_boundaries() {
+        assert_eq!(heatmap_color_for_actuation(0), from_hex(0x070070));
+        assert_eq!(heatmap_color_for_actuation(1), from_hex(0xff0000));
+        assert_eq!(heatmap_color_for_actuation(950), from_hex(0xff0000));
+        assert_eq!(heatmap_color_for_actuation(951), from_hex(0xffff00));
+        assert_eq!(heatmap_color_for_actuation(1750), from_hex(0xffff00));
+        assert_eq!(heatmap_color_for_actuation(1751), from_hex(0x070070));
+        assert_eq!(heatmap_color_for_actuation(1851), from_hex(0x800080));
+        assert_eq!(heatmap_color_for_actuation(2951), from_hex(0x0000ff));
     }
 
     #[test]
