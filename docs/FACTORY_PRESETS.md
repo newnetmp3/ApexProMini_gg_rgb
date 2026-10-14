@@ -48,7 +48,7 @@ reactive=gg:reactiveRipple
 | Data-driven sampled gradients, color cycles and simple reactive patterns | **Independent approximations** |
 | Base + idle + reactive composition, existing profile compatibility | **Implemented and software-tested** |
 | Multiple vendor variants / region masks | **36 additional mask/palette variants implemented across eight presets**; current Mini row/column alignment approximate and needs visual QA |
-| Vendor compositor: foreground/background graphics, apertures, blending, repetition and origin transforms | **Not yet faithfully supported** |
+| Vendor compositor: foreground/background graphics, apertures, blending, repetition and origin transforms | **Independent two-layer/coverage compositor added for 3 scenes**; exact GG shader math, opacity, repeated graphics, transforms still unverified |
 | Per-key physical RGB coordinate/layout fidelity | **Requires device-side QA** |
 | User's existing standalone ripple / service | **Previously confirmed working**; no altered HID transport |
 | Full parity to SteelSeries GG Prism default presets | **Not achieved** |
@@ -57,7 +57,7 @@ reactive=gg:reactiveRipple
 
 Of the 30 historical definitions, **eight have multiple region/layout variants:** `wabashAndLake`, `rainbow`, `colorFusion`, `aqua`, `freeway`, `comet`, `pride`, `twilight`. The extracted variants are associated with distinct key-selection masks or spatial regions; the second-stage renderer now includes **all 36 additional historical region variants**, via `src/regions.rs`, selected by representative row/column masks. The Mini has five physical rows mapped approximately to source logical rows 1–5; variant selection and phase coordinate scales still require device-side calibration.
 
-Additional compositing complexity appears in `westCoast`, `haze`, `warpDrive` and the `reactiveLine`, `reactiveRipple`, and `reactiveSingleKey` presets, which contain background/aperture features. The exact mathematical implementation of GG's compositor has **not** been reproduced; our current effect phase and layer blending code is an original approximation designed for portability.
+Additional compositing complexity appears in `westCoast`, `haze`, `warpDrive` and the `reactiveLine`, `reactiveRipple`, and `reactiveSingleKey` presets, which contain background/aperture features. The independent module `src/graphics.rs` now reproduces the **structural distinction** between foreground, background and aperture for the first three using source-derived functional color/period parameters and an original bounded coverage function. **Its cosine-based mask is not the verified GG aperture shader.** Reactive source aperture curves also remain approximate.
 
 The `heatmap` source defines an actuation-triggered special effect with its own heat thresholds; the renderer currently approximates recent key activity, while `heatmap_color_for_actuation` now independently implements the five source-defined analog depth/color threshold bands with boundary unit tests. Live analog actuation values are **not available from the verified evdev interface**, so the true hardware heatmap still needs a safe separately verified input protocol. **Source-level parameter parity is only partial**, despite the 31 working selectors.
 
@@ -90,6 +90,14 @@ cargo run --release --bin prism-preview -- --output prism-presets-preview.svg
 ```
 
 The GitHub Actions `Rust protocol checks` workflow also uploads `apex-mini-prism-factory-previews` as an artifact, useful for remote review without a graphical session or the physical keyboard. This is a **visual regression baseline**, not an official SteelSeries screenshot or proof of exact effect fidelity. Compare revisions by the same time/key matrix; later match against recorded GG behavior.
+
+## Compound-graphics stage: West Coast, Haze and Warp Drive
+
+The official source material for `westCoast` and `haze` contains both foreground and background gradient layers plus a gradient-less geometric aperture. `warpDrive` has foreground and aperture, without a separate background layer.
+
+The new independent `src/graphics.rs` interprets those functional fields with a pure layer compositor. It calculates each foreground/background phase from source-derived duration, wavelength and phase geometry; a bounded time/space mask blends the layers, defaulting to black where no background exists. Pure unit tests verify multiple colors over the keyboard, time variation and full 68-key feature frame compatibility. `prism-preview` uses the updated frames without any GUI or hardware access.
+
+**Fidelity limitation:** Original GG aperture shaders, anchor transforms, opacity and blending are not specified by the configuration alone. The current bounded cosine aperture is a **functional approximation**, not proof of parity. No proprietary graphics shader source is copied or executed.
 
 ## Safe operation
 
