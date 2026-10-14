@@ -1,0 +1,19 @@
+name: Read-only HID diagnostic tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  python-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate Python syntax
+        run: python3 -m compileall -q tools tests
+      - name: Run hardware-free unit tests
+        run: python3 -m unittest discover -s tests -v
