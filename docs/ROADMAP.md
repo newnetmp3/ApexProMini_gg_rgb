@@ -11,10 +11,10 @@ Status as of **2026-10-14**. Completion means stated acceptance criteria have ac
 | 4. Establish Mini-specific RGB serializer | **Static specification verified** | New inherited `base_apex_2022_wired` confirms `0x40` Feature, `0x41` Output and field layouts |
 | 5. Implement independent Rust Mini codec | **Complete — PR #2** | Squash SHA `2ccb9f67d63d`; bounded frame builders, golden-byte unit tests, guarded device selection, Rust tests and Clippy green on branch |
 | 6. Verify real Mini static RGB/per-key selection | **Whole-board solid RGB hardware verified** | A red, S green, `0x41` clear restored, **all physical keys turned blue**. Different simultaneous colors and layout fidelity still pending |
-| 7. Lighting effects and Prism profiles | **Static RGB + native keypress ripple hardware-verified; GG parity still in progress** | After PR #6's Mini-scoped udev ACL, the owner reported **“IT WORKS!”** on ripple retest. Other animations, precise wave geometry, systemd service persistence and 31 official preset matches not yet verified |
+| 7. Lighting effects and Prism profiles | **Native ripple hardware-verified; GUI/profile work in progress** | Owner confirmed manual and user-service keypress ripple works. Nine native renderer prototypes available; exact GG Prism 31-preset parity and base/idle/reactive stacking incomplete |
 | 8. Read-only device state/firmware status | Not started | Real readback without altering settings |
 | 9. Actuation/Rapid Trigger/remapping | Not started | Independently verified commands and rollback |
-| 10. Package Linux service/application | **User service installed and active; lifecycle QA pending** | Owner's `systemctl --user status` shows enabled + active for 4m42s, Mini 513-byte control Feature/65-byte Output, two evdev readers. Visible ripple while daemonized, login persistence, stop restoration, disconnect/reconnect, native installer and full app packaging unverified |
+| 10. Package Linux service/application | **Service + live ripple hardware-verified; lifecycle QA pending** | User service enabled/active with two input readers; owner also verified visible ripples while it runs. Logon/reconnect/stop restoration and distribution packaging pending |
 
 **Confirmed hardware:** A red, S green, clear restoring onboard lighting, and entire keyboard solid blue. **Resolved ripple blocker:** Mini `event11` and `event12` initially failed with `Permission denied (os error 13)`. The scoped input ACL milestone was followed by owner-confirmed **working keypress ripple**. Do not infer exact GG preset fidelity or background daemon reliability from this single live success.
 
@@ -22,7 +22,7 @@ Status as of **2026-10-14**. Completion means stated acceptance criteria have ac
 
 **Hardware milestone documentation:** [PR #7](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/7) merged as `045b0845561e222983aa9b9db79b77cc912bb7f4`, recording owner-confirmed native ripple operation. Next: verify the optional systemd daemon and exact official preset behavior.
 
-**Latest service test (owner systemd status):** user-level `apex-mini-ripple.service` installed, enabled and running for ~4m42s with two detected evdev readers, the correct vendor HID interface, and no startup error in the displayed log. This verifies **daemon installation/start and liveness**, not actual ripple visual behavior during daemon operation or service reliability after reconnect/login. Next: validate live keypress ripples in the background; then clean stop/clear and reconnect/restart.
+**Latest service test (owner systemd status and follow-up visible ripple):** user-level `apex-mini-ripple.service` installed, enabled and running for ~4m42s with two detected evdev readers, the correct vendor HID interface, and no startup error in the displayed log. Owner additionally answered **yes** when asked whether keypress ripples appear while the daemon is running. Thus service-owned live reactive lighting is hardware-confirmed; logout/login, stop/clear, and reconnect reliability are not. Next: validate live keypress ripples in the background; then clean stop/clear and reconnect/restart.
 
 **Systemd user service documentation:** [PR #8](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/8) merged as `b53923e1228a7af9da0c3f5c226e1f402b8b7705`, recording owner-verified service installed/enabled/active with two input readers. CI green; visible effects in the background, stop/clear and reconnection still require validation.
 
@@ -39,6 +39,14 @@ Status as of **2026-10-14**. Completion means stated acceptance criteria have ac
 - Repeated presses, held keys and no-press periods behave correctly; no unintended writes after Ctrl+C.
 - **Observed:** `systemd --user` unit runs under the owner's user slice (UID 1000), enabled and active for ~4m42s. **Not yet observed:** automatic restart after device disconnect and successful hidraw/evdev re-enumeration.
 - Service installation is disabled by default, but **owner explicitly enabled it**, and it is now active. The code does not intentionally persist or log key contents.
+
+## Native GUI and profile editor milestone
+
+**In progress, branch `feature/native-prism-gui-profile-engine`:** introduce a true Wayland/X11 native Rust GUI (eframe/egui) with a 68-key RGB preview, nine native effect choices, color/brightness/speed/FPS controls, per-key RGB overrides, safe Save/Apply, user service controls and a KDE desktop launcher. Service reloads a versioned, validated, atomically saved user profile; the GUI never competes for the HID writer.
+
+**Acceptance:** optional GUI compiles in CI; Arch/KDE GUI launches and renders; profile survives restarts; applying a new preset changes hardware, keypress ripple continues after switching, per-key override works, service stop restores onboard lighting. *Until owner tests, implementation ≠ verified behavior.*
+
+Full port remains a separate roadmap: load actual GG preset configurations and match **all default SteelSeries GG Prism presets** with layered base/idle/reactive effects, parameter editing, masks/zones and save/import.
 
 ## Comprehensive GG preset parity (long-term requirement)
 
