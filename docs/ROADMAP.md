@@ -24,6 +24,8 @@ Status as of **2026-10-14**. Completion means stated acceptance criteria have ac
 
 **Latest service test (owner systemd status):** user-level `apex-mini-ripple.service` installed, enabled and running for ~4m42s with two detected evdev readers, the correct vendor HID interface, and no startup error in the displayed log. This verifies **daemon installation/start and liveness**, not actual ripple visual behavior during daemon operation or service reliability after reconnect/login. Next: validate live keypress ripples in the background; then clean stop/clear and reconnect/restart.
 
+**Systemd user service documentation:** [PR #8](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/8) merged as `b53923e1228a7af9da0c3f5c226e1f402b8b7705`, recording owner-verified service installed/enabled/active with two input readers. CI green; visible effects in the background, stop/clear and reconnection still require validation.
+
 ## Input device access and service acceptance criteria
 
 - When a `--list-inputs` scan detects the device but reports `[no read access]`, offer only a dedicated Mini `uaccess` seat ACL rule; avoid `sudo` services, global `input` group grants and world-readable evdev.
