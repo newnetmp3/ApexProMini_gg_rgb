@@ -28,7 +28,7 @@ The native GUI compiles with the optional Rust `gui` feature. Existing `apex-min
 
 ## Current editor features
 
-- Preset selector for **nine independent native renderer prototypes**: solid, gradient, rainbow, wave, breathing, color shift, sparkle, ripple, reactive
+- Preset selector for **fourteen independent native renderer prototypes**: solid, gradient, rainbow, wave, breathing, color shift, sparkle, ripple, reactive, comet, split rainbow, prismatic sweep, heatmap and reactive line. **These are not automatically identical to official GG presets.**
 - Live **locally simulated** 68-logical-key keyboard preview using the same Rust renderer as the actual device; this is not live hardware readback
 - Editable primary/accent RGB colors, brightness, speed, FPS (bounded and validated)
 - Select a keyboard key in the preview, assign a persistent per-key RGB override, or clear the override
