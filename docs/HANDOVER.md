@@ -2,7 +2,7 @@
 
 **Updated:** 2026-10-14  
 **Repository:** https://github.com/newnetmp3/ApexProMini_gg_rgb  
-**Latest merged milestone:** PR #4, full-board effects and Prism preset catalog. **Current branch:** `fix/reactive-evdev-daemon`; targeted evdev input diagnostics and optional user service, tests/PR pending. **New owner feedback:** whole keyboard solid blue works; **keypress ripple did not trigger**. First physical full-board success; ripple still unverified.  
+**Latest merged milestone:** [PR #5](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/5) merged as `608c668e580ec154065ace5810723f81e9a8bcbb` to `main` (Rust unit tests/Clippy and Python tests green on PR). Adds auto-discovery of Mini evdev keyboard input, read-only `--test-input` diagnostics, and optional user-level systemd ripple service. **Owner observed full keyboard blue, but ripple did not activate before this fix. Live retest pending.**  
 **Hardware:** Wired SteelSeries Apex Pro Mini `1038:161e`; owner runs Arch Linux, KDE Wayland.
 
 ## Verified milestones
@@ -40,17 +40,17 @@
 
 ## Immediate next work
 
-1. Finish CI and merge `fix/reactive-evdev-daemon`, update this file and roadmap with verified commit/PR and test outcomes.
+1. PR #5 merged to `main` with Rust unit tests/Clippy and Python CI green. Check latest main workflow status after docs edits.
 2. Ask owner to run **read-only** `./target/release/apex-mini-rgb --list-inputs` and `./target/release/apex-mini-rgb --test-input --seconds 10`, tapping A, S and Space. Expect HID usages 4, 22 and 44. This isolates evdev event delivery from rendering; do not infer key events from successful static RGB alone.
 3. If the diagnostic observes keydowns, test `--effect ripple --confirm-device-write` (automatically selected Mini event nodes) and verify the visible ring on the board. If no events, inspect selected input node(s), sysfs capabilities and seat ACLs; do not suggest `sudo` blindly.
 4. Once ripple works, optionally install and enable the explicit `systemd --user` ripple daemon following `docs/SERVICE.md`. Its event stream is transient and unlogged. Check unplug/reconnect and SIGTERM restoring onboard lighting.
 5. Continue exact SteelSeries GG default Prism preset parity using the 31-identifier catalog, with separate physical verification of animation parameters and reactive layout.
 
-## Current fix branch — reactive evdev monitoring and user daemon
+## Latest merged fix — PR #5 reactive evdev monitoring and user daemon
 
 - **Known input:** real 68-key full board solid blue; ripple keypress detection failed.
 - **Root-cause hypothesis (not yet verified):** wrong/idle manual evdev interface or missing evdev visibility; now reads all valid keyboard nodes and exposes a read-only keydown diagnostic.
-- **New code:** `src/input.rs` multi-reader, strict wired Mini selection, keydown parser and reader-stop notification; `src/animate.rs` auto-input and bounded diagnostic; `src/main.rs` dispatch; optional service unit and installer.
+- **New code merged:** `src/input.rs` multi-reader, strict wired Mini selection, keydown parser and reader-stop notification; `src/animate.rs` auto-input and bounded diagnostic; `src/main.rs` dispatch; optional service unit and installer. **Rust/Clippy and Python PR CI green.**
 - **Safety:** daemon is opt-in; no input grabs, no key contents logged to service output, no root process, explicit HID write confirmation in service ExecStart; service stops with known `0x41` clear.
 
 ## Latest merged milestone — PR #4
@@ -71,6 +71,8 @@
 - **2026-10-14 PR [#3](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/3):** Owner confirmed physical **A key turned red**; docs merged to `main` as `71fc653c701fad5f63daa23157c1e09d6d3a03cf`. **Follow-up hardware checks:** `0x41` clear restored onboard lighting and **S key turned green**; full-key frames and live presets still awaiting tests.
 
 - **2026-10-14 PR [#4](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/4):** Nine provisional native RGB effect renderers, full-key static frame, physically scoped Linux evdev keypress ripple/reactive input, bounded animation loop and Ctrl+C clear. All PR branch CI green; **new animations/ripple are not yet hardware verified**. Squash commit `570ccddee9c254bd2de28c7e9b1fb62ece192756`. Cataloged 31 official GG Prism preset identifiers for future exact behavior matching.
+
+- **2026-10-14 PR [#5](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/5):** Fixed the evdev reader's dependence on one manual node; added read-only key event diagnostic, automatic multi-interface monitoring, reader disconnect handling, Linux keycode corrections, and optional disabled-by-default user-level systemd ripple daemon. PR checks passed; **actual keypress events and visible ripple are awaiting owner retest**. Squash SHA `608c668e580ec154065ace5810723f81e9a8bcbb`.
 
 ## Rolling documentation convention
 
