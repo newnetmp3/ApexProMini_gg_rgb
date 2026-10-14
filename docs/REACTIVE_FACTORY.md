@@ -1,5 +1,7 @@
 # Factory reactive lighting — event envelopes and regression testing
 
+**Implemented on main:** [PR #14](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/14), merge SHA `37a8ebb2363eb6715a4e7aeb956c1a0dd193cf9e`; all Rust/Clippy/GUI/Python/gallery PR checks passed. Owner hardware test remains deferred.
+
 **Scope:** the three historical SteelSeries GG Prism factory selectors `gg:reactiveRipple`, `gg:reactiveLine`, and `gg:reactiveSingleKey`. Owner is remote, so this milestone only uses read-only tests/preview generation. The already **hardware-verified native `ripple`** remains unchanged.
 
 ## Metadata that was recovered
