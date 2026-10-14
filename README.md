@@ -132,6 +132,10 @@ cargo run --release -- --preview-effect gg:reactiveRipple
 
 The new profile engine also supports optional `idle=`, `idle_seconds=` and `reactive=` fields in the existing version-1 `profile.conf`. Old profiles load unchanged; no changes to previously confirmed HID packets or the daemon's default native ripple. More information: [factory preset technical audit](docs/FACTORY_PRESETS.md).
 
+## Reusable offline scene compositor
+
+The effects-only engine now includes an independent `src/compositor.rs` supporting ordered foreground/background layers, four blend modes, opacity, origin/rotation/repeats and separate aperture masks. Three complex factory-style scenes (`gg:westCoast`, `gg:haze`, `gg:warpDrive`) use declarative composition recipes. This is a **software-tested independent reconstruction**, not an assertion of exact SteelSeries GG shader parity. The known-safe Mini USB protocol and working reactive user service are unchanged. [Rendering architecture and fidelity gaps](docs/COMPOSITOR.md).
+
 ## Generate the Prism preset gallery remotely (no GUI/keyboard)
 
 For headless review, the Rust engine can render a complete SVG contact sheet of **31 historical factory-style presets at three animation phases**:

@@ -7,6 +7,7 @@
 **Latest merged effects milestone:** [PR #10](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/10), squash SHA `8629738a38d39d867b8a5137b6fee9fd897e53c3`, with 31 factory-style historical selectors, 36 additional region variants, base/idle/reactive compositor, and analog heatmap color threshold lookup. CI passed, **but exact GG parity and physical QA remain pending**.  
 **Latest merged remote QA milestone:** [PR #11](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/11), squash SHA `45d9bb363cfc5518c6659e2c07b93808abe522a3`, adds read-only 31-preset × three-phase SVG gallery and CI artifact. Rust tests, Clippy, optional GUI compilation, Python diagnostics and SVG artifact build passed. User remains remote; defer GUI/device QA.
 **Latest merged effects milestone:** [PR #12](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/12), squash SHA `ca2deeca512a43a44a1dc08aaa65bcf5468b319c`, adds independent foreground/background/aperture scene rendering for West Coast, Haze and Warp Drive. All PR Rust, Clippy, GUI compilation, Python and SVG gallery checks passed. This is source-parameter-derived, with an **approximate aperture shader**, not exact SteelSeries GG parity. Owner remains remote; GUI/device QA deferred. Owner is remote, so **defer GUI/hardware QA** and concentrate on factory preset conversion. Actual GG 108.3 Prism SQL migrations were recovered offline. We found **30 complete source definitions**, and GG 106's `redPulse` name is a rename of existing `faze`. `src/factory.rs` implements all **31 historical identifiers as parameter-derived renderable previews**, not 31 equivalent vendor algorithms. A new `src/layers.rs` base/idle/reactive compositor and backward-compatible profile extensions are integrated with the daemon and GUI. **Hardware acceptance for these new factory modes is pending**. See `docs/FACTORY_PRESETS.md`.  
+**Current effects-only milestone (branch `feature/prism-layer-compositor-v2`):** `src/compositor.rs` introduces a pure ordered-scene renderer with Normal/Add/Multiply/Screen blends, opacity, origin/scale/rotation, spatial repetition/phase offsets, masked apertures and independent per-layer animation. `src/graphics.rs` now represents West Coast, Haze and Warp Drive as layer recipes using that engine, while preserving the existing Mini HID transport. Offline scene/motion/mask tests and `docs/COMPOSITOR.md` added. **These are new, independent approximations, NOT recovered vendor shader code or proven GG parity.** GUI and keyboard testing remain deferred at the user's request.  
 **Hardware:** Wired SteelSeries Apex Pro Mini `1038:161e`; owner runs Arch Linux, KDE Wayland.
 
 ## Verified milestones
@@ -30,6 +31,8 @@
 12. **2026-10-14 read-only remote gallery (PR #11 merged, all CI passed):** Added headless `src/bin/prism_preview.rs`, generating an SVG visual test sheet for all 31 historic factory selectors with three synthetic animation phases each; keypress modes use simulated A-key hits, **never actual input**. A new CI job uploads the output as `apex-mini-prism-factory-previews`. No HID, evdev, GUI, proprietary assets or device access.
 
 13. **2026-10-14 multi-graphics compositor stage (PR #12 merged; all CI green):** New `src/graphics.rs` handles separate gradient foreground, background and bounded spatial aperture layers for three complex presets (West Coast, Haze, Warp Drive) without changing any driver writes. Exact vendor shader masks remain unrecovered; this is a partial, testable structural port.
+
+14. **2026-10-14 independent compositing milestone (branch `feature/prism-layer-compositor-v2`; CI/PR pending):** reusable ordered z-stack, four channel blend modes, alpha, origin/rotation/scale, spatial repetitions, phase offsets and mask options. West Coast/Haze/Warp Drive now use declarative scene recipes with source-derived RGB/period fields, but **not vendor mask/opacity math**. Full 68-key offline frame tests and numerical color fixtures; underlying HID/proven ripple untouched. See `docs/COMPOSITOR.md`.
 
 ## Safety: do not conflate these conditions
 
@@ -67,12 +70,12 @@
 
 ## Immediate next work — effects only while owner is remote
 
-1. **PR #10 and PR #11 merged and CI passed**. The `apex-mini-prism-factory-previews` artifact can be downloaded from GitHub Actions for remote review without GUI/device access.
-2. **36 source-derived alternate region variants are now implemented** for the eight known multi-variant presets. Next, calibrate the six-row Prism source coordinate masks to the Mini's five physical rows and HID keys. Existing selection is approximate; do not claim exact variant fidelity.
-3. **PR #12 delivered an independent foreground/background/aperture compositor** for West Coast, Haze and Warp Drive with RGB/phase parameters derived from local authorized source and approximation of original mask math. Next: original aperture motion, z order, repeated graphics, origin transforms, trigger layers and key coordinate calibration. Gallery from PR #11 is the remote baseline; no vendor JSON/source in Git.
-4. Extend exact reactive trigger/wave envelopes; the five original heatmap analog color bands are now mapped in an offline-tested utility, but actual Hall-actuation readings are not available through evdev. Confirm responsiveness and retain **no keystroke logging**.
-5. Preserve existing working daemon and `--effect ripple` defaults. Save physical GUI/per-key effects validation for when owner returns to the keyboard.
-6. Continue `docs/FACTORY_PRESETS.md` acceptance matrix until every currently shipped GG preset is behaviorally compared. 31 historical *names* is not 31 verified factory equivalents.
+1. Finish CI (headless Rust tests, strict Clippy, Python, native GUI compilation, SVG artifact), then open/merge `feature/prism-layer-compositor-v2`; record actual PR and merge SHA in this handover and ROADMAP.
+2. **Implemented now:** pure ordered color-layer compositor with four blend modes, alpha, origin/scale/rotation, repeats and apertures. Three compound scenes migrated with unchanged known-safe HID transport.
+3. **Next fidelity task:** recover original GG aperture/mask movement and layer order/opacity from authorized sample observations; add time/key/color golden fixtures. Do not call current cosine masks vendor equivalents.
+4. Calibrate source six-row Prism grid to the wired Mini's five physical rows, mapping all 36 region variants accurately; offline coordinates then owner physical QA later.
+5. Continue reactives' source-defined falloff/trigger envelopes and analog heatmap design **without unverified Hall sensor reads or arbitrary HID commands**.
+6. Owner is remote; don't request GUI or keyboard access. Review offline SVG gallery built in PR #11; postpone physical preset-by-preset acceptance until owner returns.
 
 ## Latest merged permission fix — PR #6, active-seat Mini-only udev rule
 
@@ -130,6 +133,8 @@
 - **2026-10-14 PR [#11](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/11):** Headless SVG gallery for 31 modes × three phases plus simulated reactive keypress frames; all CI passed, artifact verified on Actions. Squash SHA `45d9bb363cfc5518c6659e2c07b93808abe522a3`. No physical input or HID writes.
 
 - **2026-10-14 PR [#12](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/12):** Source-parameter-derived foreground/background/aperture implementation for West Coast, Haze and Warp Drive via `src/graphics.rs`. GUI compilation, headless Rust/Clippy, Python diagnostics and SVG gallery CI all passed. Squash SHA `ca2deeca512a43a44a1dc08aaa65bcf5468b319c`. Proprietary shader math remains unverified; no owner hardware QA while remote.
+
+- **2026-10-14 generic layering branch:** Added `src/compositor.rs` with ordered blend operations/alpha/masks/spatial transforms and refactored three compound GG preview scenes in `src/graphics.rs`. Unit and numerical fixtures guard independent behavior; absolute vendor fidelity is not inferred. PR/CI pending.
 
 ## Rolling documentation convention
 
