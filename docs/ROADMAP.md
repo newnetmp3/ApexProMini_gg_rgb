@@ -54,13 +54,19 @@ Full port remains a separate roadmap: load actual GG preset configurations and m
 
 Added a reusable `base + idle + reactive` pure lighting compositor, compatible with existing version-1 profiles; when no layer is configured, prior confirmed native ripple rendering remains unchanged.
 
-**Still blocking strict parity:** **36 additional multi-region masks now implemented but coordinate alignment unverified**, GG foreground/background/aperture/alpha graph behavior, device-specific geometry, 121-version profile catalogue differences, **five heatmap analog threshold bands mapped offline but missing verified live analog data**, and side-by-side real-hardware confirmation. Full details and next-test matrix: [`docs/FACTORY_PRESETS.md`](FACTORY_PRESETS.md).
+**Still blocking strict parity:** **36 additional multi-region masks now implemented but coordinate alignment unverified**, partial foreground/background/aperture scene rendering now implemented for 3 presets; original GG aperture shader, alpha and graph sequencing remain unverified, device-specific geometry, 121-version profile catalogue differences, **five heatmap analog threshold bands mapped offline but missing verified live analog data**, and side-by-side real-hardware confirmation. Full details and next-test matrix: [`docs/FACTORY_PRESETS.md`](FACTORY_PRESETS.md).
 
 ## Automated offline visual verification
 
 **Merged in [PR #11](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/11), SHA `45d9bb363cfc5518c6659e2c07b93808abe522a3`:** read-only binary `prism-preview` renders a complete SVG sheet with **31 factory-style modes × three phases**, including synthetic keypress samples for reactive presets. GitHub Actions uploads a downloadable `apex-mini-prism-factory-previews` artifact. This supports remote inspection and regression review with no keyboard or graphical desktop. Generator Rust/GUI/Python CI green and gallery artifact successfully uploaded to GitHub Actions. Actual GG visual fidelity is still not verified.
 
 **Next fidelity gates** after the gallery: GG foreground/background/aperture compositor, six-row to Mini-five-row coordinate calibration, analog Hall sensor readback, timing/opacity matching and device-side comparisons. SVG color regression is **not** proof of true vendor parity.
+
+## Source-derived compound graphics (in progress)
+
+The `feature/prism-composite-graphics` branch adds an independent pure renderer for `westCoast`, `haze` and `warpDrive` foreground/background/aperture structures. Gradient colors, periods, wave signs and geometry classes are sourced from authorized local GG configuration analysis, but the bounded cosine-based aperture interpolation and compositing equations are our own. Offline Rust frame tests apply; full vendor shader parity is **not** achieved or owner-verified.
+
+Next fidelity milestone: z-ordered multi-graphic accumulation, mask anchor/origin transforms, opacity and repetition semantics, and reactive aperture timing.
 
 ## Comprehensive GG preset parity (long-term requirement)
 
