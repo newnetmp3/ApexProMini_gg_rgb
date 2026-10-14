@@ -46,6 +46,10 @@ The source data was recovered from the owner's GG 108.3 Prism SQL migrations and
 
 The independent pure Rust compositor now supports ordered graphic layers, four blend modes, alpha, per-layer spatial origin/rotation/scale, repetition/phase shifts and masked apertures. West Coast, Haze, and Warp Drive factory-style previews have been migrated onto this engine, keeping source-derived functional colors and periods. Offline tests make this inspectable while the user is remote. **This is a new approximation, not exact vendor aperture-mask fidelity.** See [`docs/COMPOSITOR.md`](COMPOSITOR.md).
 
+## Factory effects: physical key-position model
+
+The independent `gg:<preset>` pipeline now uses a **width-aware 15u × five-row** Mini coordinate map with all 68 verified HID usages, rather than the old uniform position spacing. Wide key centers and the `gg:` SVG gallery are consistent. Historical six-row/22-column source masks remain approximate; ISO alternate HID placements and every actual LED x/y must be visually calibrated later. The previously owner-verified *native* ripple coordinate map and daemon are **unchanged**. [Layout model](KEY_GEOMETRY.md).
+
 ## Source-duration factory reactive effects
 
 Historical GG selectors `gg:reactiveRipple`, `gg:reactiveLine` and `gg:reactiveSingleKey` have independent pure trigger envelopes with GG-derived nominal periods (250ms, 500ms and 1250ms). Each has bounded overlap handling, exact expiry and native-Mini key coordinates; the 0.1× slow Single Key event is retained in memory for up to 12.5 seconds rather than truncated after the previous 2.5-second generic window. Relative-duration SVG snapshots, daemon and GUI simulation use the same timing model.
