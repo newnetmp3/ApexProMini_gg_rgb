@@ -29,6 +29,12 @@ These are **our provisional descriptive effect names**, not assertions about GG'
 
 The approximate US-60% spatial layout presently used for position-dependent effects covers all 68 logical HID entries (including international variants). Accurate physical coordinates, legends, and region layouts still need visual validation.
 
+## Native GUI foundation
+
+The first `apex-mini-gui` (Rust eframe/egui) editor exposes the existing nine native renderer prototypes, a simulated keyboard-map preview, validated color/timing controls, and static overrides painted onto individual keys. It controls the **single already-working systemd user daemon** through a saved per-user profile, never writing HID concurrently. A 31-identifier historical GG preset catalog is visible in the GUI **as unimplemented or prototype-only**, not as 31 falsely working effects.
+
+**Pending on-device QA:** desktop rendering on KDE Wayland, applying edited profile and per-key override, persistence, actual animated effects, service stop/restoration. Only `solid` and `ripple` have prior hardware confirmation, separate from the new GUI.
+
 ## Official GG 108.3.0 Prism preset identifier inventory (31)
 
 **Source:** owner's locally inspected `SteelSeriesGG108.3.0.pkg` → PrismSyncV2 package → bundled Prism database migration SQL. This table reports **31 distinct `name_locale_key` identifiers referenced by the bundled migrations**, not necessarily 31 presets simultaneously available in the UI. Presets can be version-dependent, deleted, hidden, or special-case defaults. The exact visibility and per-device compatibility still require inspecting GG's current database and UI. The public repo contains **only identifiers and metadata**, not proprietary preset JSON.
