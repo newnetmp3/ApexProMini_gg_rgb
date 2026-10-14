@@ -36,6 +36,10 @@ cargo run --release --bin prism-preview -- --output prism-presets-preview.svg
 
 The **SVG preview gallery** now samples factory reactives at 8%, 40% and 80% of their source nominal trigger period instead of showing every factory reactive at the same three absolute times. For example, `gg:reactiveSingleKey` is sampled at 0.1, 0.5 and 1.0 seconds, while `gg:reactiveRipple` is sampled at 0.02, 0.10 and 0.20 seconds. These frames are synthesized from A-key events and do not open `/dev/input`, `/dev/hidraw`, the GUI, or the network.
 
+## Provisional physical-position improvement
+
+Factory `gg:reactiveRipple` and `gg:reactiveLine` now use `src/layout.rs` width-aware key centers instead of treating Space, Shift, Enter and Backspace as equally spaced 1u keys. Their origin and destination coordinates are now consistent with factory RGB rendering and the read-only SVG gallery. Nominal trigger periods and independently modeled wavefront math are unchanged. **The owner-confirmed native `ripple` continues to use its previously working mapping.** This is provisional ANSI-style 60% geometry, not a calibrated physical measurement or a verified match to GG's own keyboard shader. See [KEY_GEOMETRY.md](KEY_GEOMETRY.md).
+
 ## Remaining fidelity tasks
 
 1. Reconstruct actual GG reactive aperture shape and pixel-mask falloff from authorized comparative output, instead of treating the independent Gaussian front as exact.
