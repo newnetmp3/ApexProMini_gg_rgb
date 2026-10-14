@@ -24,6 +24,11 @@ These are **our provisional descriptive effect names**, not assertions about GG'
 | `sparkle` | Deterministic shimmering individual LEDs | base, accent, speed, brightness | Pending |
 | `ripple` | Physical keydown starts expanding colored spatial ring | base, accent, speed, brightness; **USB input node** | **Keypress-triggered lighting working (owner-confirmed); exact spatial propagation and GG fidelity pending** |
 | `reactive` | Physical keydown lights pressed LED then fades | base, accent, speed, brightness; **USB input node** | Pending keypress test |
+| `comet` | Moving illuminated head with fading trail | base, accent, speed, brightness | Pending; independent prototype |
+| `rainbow-split` | Mirrored shifting rainbow | speed, brightness | Pending; independent prototype |
+| `prismatic-sweep` | Multi-axis hue field | speed, brightness | Pending; independent prototype |
+| `heatmap` | Keypress activity fades into colored hotspots | base, accent, speed, brightness | Pending; independent prototype |
+| `reactive-line` | Keypress emits a luminous line across the key's row | base, accent, speed, brightness | Pending; independent prototype |
 
 `ripple` and `reactive` use **non-grabbing Linux evdev input** scoped to the identified wired Apex Pro Mini USB device; on Wayland they do not require a compositor-wide hotkey hook. Key data is never logged, persisted, or transmitted. Input-device access depends on local seat/udev permissions.
 
@@ -31,7 +36,7 @@ The approximate US-60% spatial layout presently used for position-dependent effe
 
 ## Native GUI foundation
 
-The first `apex-mini-gui` (Rust eframe/egui) editor exposes the existing nine native renderer prototypes, a simulated keyboard-map preview, validated color/timing controls, and static overrides painted onto individual keys. It controls the **single already-working systemd user daemon** through a saved per-user profile, never writing HID concurrently. A 31-identifier historical GG preset catalog is visible in the GUI **as unimplemented or prototype-only**, not as 31 falsely working effects.
+The first `apex-mini-gui` (Rust eframe/egui) editor exposes fourteen native renderer prototypes (original nine, plus comet, mirrored rainbow, prismatic sweep, keypress heatmap, and reactive line), a simulated keyboard-map preview, validated color/timing controls, and static overrides painted onto individual keys. It controls the **single already-working systemd user daemon** through a saved per-user profile, never writing HID concurrently. A 31-identifier historical GG preset catalog is visible in the GUI **as unimplemented or prototype-only**, not as 31 falsely working effects.
 
 **Pending on-device QA:** desktop rendering on KDE Wayland, applying edited profile and per-key override, persistence, actual animated effects, service stop/restoration. Only `solid` and `ripple` have prior hardware confirmation, separate from the new GUI.
 
@@ -45,20 +50,20 @@ The first `apex-mini-gui` (Rust eframe/egui) editor exposes the existing nine na
 | chasingGhosts | Base / idle | Not matched |
 | clown | Base / idle | Not matched |
 | colorFusion | Base / idle | Not matched |
-| comet | Base / idle | Not matched |
+| comet | Base / idle | Native comet **prototype**, exact GG behavior not matched |
 | disabled | Base / idle | Not matched |
 | discoMode | Base / idle; bitmap flag | Not matched |
 | drain | Base / idle | Not matched |
 | faze | Base / idle | Not matched |
 | freeway | Base / idle | Not matched |
 | haze | Base / idle | Not matched |
-| heatmap | Base / idle | Not matched |
+| heatmap | Base / idle | Native keypress heatmap **prototype**, exact GG behavior not matched |
 | pride | Base / idle | Not matched |
-| prism | Base / idle | Not matched |
+| prism | Base / idle | Native prismatic sweep **prototype**, exact GG behavior not matched |
 | radioactive | Base / idle | Not matched |
 | rainbow | Base / idle; bitmap flag | Generic rainbow prototype only; **not a parity match** |
-| rainbowSplit | Base / idle | Not matched |
-| reactiveLine | Reactive | Not matched |
+| rainbowSplit | Base / idle | Native mirrored rainbow **prototype**, exact GG behavior not matched |
+| reactiveLine | Reactive | Native reactive-line **prototype**, exact GG behavior not matched |
 | reactiveRipple | Reactive | Native keypress ripple **hardware-confirmed**, but official preset parameters and fidelity **not yet matched** |
 | reactiveSingleKey | Reactive | Generic reactive prototype only; **not a parity match** |
 | redPulse | Needs version-specific inspection | Not matched |
@@ -77,7 +82,7 @@ The three **reactive** identifiers are especially important for keypress-trigger
 
 ### Acceptance rules for each official preset
 
-A preset is **complete** only when its vendor-defined name, palette, gradient stops, animation phase/speed, spatial layout, device key coverage, idle/reactive layering, and expected hardware output are documented and compared to GG behavior on the Mini. The initial nine native renderer names do **not** increase official-parity completion automatically.
+A preset is **complete** only when its vendor-defined name, palette, gradient stops, animation phase/speed, spatial layout, device key coverage, idle/reactive layering, and expected hardware output are documented and compared to GG behavior on the Mini. The initial fourteen native renderer names do **not** increase official-parity completion automatically.
 
 ## Roadmap to faithful GG default preset parity
 
