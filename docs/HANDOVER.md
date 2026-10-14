@@ -64,7 +64,7 @@
 1. Verify `feature/prism-factory-presets-dataset` CI (Rust unit tests, Clippy, GUI compile, Python) and merge PR only when green; update both rolling docs with actual PR and SHA.
 2. **36 source-derived alternate region variants are now implemented** for the eight known multi-variant presets. Next, calibrate the six-row Prism source coordinate masks to the Mini's five physical rows and HID keys. Existing selection is approximate; do not claim exact variant fidelity.
 3. Implement more of GG's graphics compositor features (foreground/background/aperture, opacity, z order, repetitions, origins) from independent model descriptions, avoiding published proprietary JSON.
-4. Extend exact reactive and heatmap configuration to the original duration/threshold semantics. Confirm responsiveness and retain **no keystroke logging**.
+4. Extend exact reactive trigger/wave envelopes; the five original heatmap analog color bands are now mapped in an offline-tested utility, but actual Hall-actuation readings are not available through evdev. Confirm responsiveness and retain **no keystroke logging**.
 5. Preserve existing working daemon and `--effect ripple` defaults. Save physical GUI/per-key effects validation for when owner returns to the keyboard.
 6. Continue `docs/FACTORY_PRESETS.md` acceptance matrix until every currently shipped GG preset is behaviorally compared. 31 historical *names* is not 31 verified factory equivalents.
 
