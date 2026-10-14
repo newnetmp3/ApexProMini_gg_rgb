@@ -1,0 +1,15 @@
+[package]
+name = "apex-pro-mini-gg-rgb"
+version = "0.1.0"
+edition = "2021"
+description = "Experimental wired Apex Pro Mini RGB protocol and guarded Linux HID diagnostic"
+license = "MIT"
+repository = "https://github.com/newnetmp3/ApexProMini_gg_rgb"
+
+[lib]
+name = "apex_pro_mini"
+path = "src/lib.rs"
+
+[[bin]]
+name = "apex-mini-rgb"
+path = "src/main.rs"

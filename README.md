@@ -2,7 +2,7 @@
 
 Native Linux research and driver-development workspace for the **wired SteelSeries Apex Pro Mini (USB `1038:161e`)**, using verified HID observations and local, legally obtained SteelSeries GG resources.
 
-**Current status:** USB transport fix validated on Arch Linux; exact Mini RGB wire protocol **not yet validated against hardware**. Do not assume a successful HID write changes the keyboard.
+**Current status:** The Mini's official **0x40 / 513-byte Feature** per-key RGB command and **0x41 / 65-byte Output** clear command have been recovered from GG device specifications. Independent Rust encoding and unit tests are implemented; **physical lighting behavior has not yet been verified**. Do not assume a successful HID write changes the keyboard.
 
 ## Quick start (read-only)
 
@@ -16,6 +16,27 @@ python3 -m unittest discover -s tests -v
 ```
 
 Expected *observed* control endpoint on the owner's machine: usage page `0xFFC0`, interface 1, report ID 0, **65-byte Output** and **513-byte Feature** reports. The `/dev/hidrawN` path can change after reconnecting the keyboard. The probe discovers it dynamically and **never sends HID commands**.
+
+## Experimental native Rust RGB test (strictly opt-in)
+
+The new standalone zero-dependency Rust crate includes the official Mini command serializer and checks the exact HID vendor ID, product ID, vendor usage page, and report sizes before opening a device for writes.
+
+```bash
+cargo test --all-targets
+cargo build --release
+
+# Safe, read-only checks:
+./target/release/apex-mini-rgb
+./target/release/apex-mini-rgb --dry-run A ff0000
+
+# Optional owner-approved experimental hardware test (A key only):
+./target/release/apex-mini-rgb --write-key A ff0000 --confirm-device-write
+./target/release/apex-mini-rgb --clear --confirm-device-write
+```
+
+The two final commands **change RGB state**; run them only after reviewing the read-only output and accepting that lighting may need a keyboard reconnect or native profile reset. There is no firmware, macro, or actuation functionality in this crate. The `clear` command restores control to onboard lighting if the firmware honors its official command; a USB success message alone does not prove it.
+
+See [`docs/PROTOCOL.md`](docs/PROTOCOL.md) for the recovered frame layout and [`docs/ROADMAP.md`](docs/ROADMAP.md) for acceptance criteria.
 
 ## Source repositories
 
