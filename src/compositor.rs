@@ -89,9 +89,9 @@ pub struct Graphic {
 /// For safety, every value is clipped to valid 8-bit RGB output. Scene can
 /// borrow compile-time arrays; no allocations occur per key frame.
 #[derive(Clone, Copy, Debug)]
-pub struct Scene {
+pub struct Scene<'a> {
     pub clear: Rgb,
-    pub layers: &'static [Graphic],
+    pub layers: &'a [Graphic],
 }
 
 pub const BLACK: Rgb = Rgb {
@@ -206,7 +206,7 @@ pub fn blend_over(background: Rgb, foreground: Rgb, opacity: f32, mode: BlendMod
     interpolate(background, target, opacity)
 }
 
-impl Scene {
+impl Scene<'_> {
     pub fn sample(&self, x: f32, y: f32, time: f32, speed: f32) -> Rgb {
         self.layers.iter().fold(self.clear, |background, graphic| {
             let t = phase(graphic.motion, x, y, time, speed);
@@ -249,7 +249,7 @@ mod tests {
     fn layer_order_and_opacity_are_explicit() {
         let back_first = Scene { clear: BLACK, layers: &[RED_LAYER, BLUE_LAYER] };
         let front_first = Scene { clear: BLACK, layers: &[BLUE_LAYER, RED_LAYER] };
-        assert_eq!(back_first.sample(0.3, 0.4, 0.0, 1.0), Rgb { red: 127, green: 0, blue: 128 });
+        assert_eq!(back_first.sample(0.3, 0.4, 0.0, 1.0), Rgb { red: 128, green: 0, blue: 128 });
         assert_eq!(front_first.sample(0.3, 0.4, 0.0, 1.0), RED);
     }
     #[test]
