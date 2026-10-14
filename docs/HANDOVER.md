@@ -44,7 +44,7 @@
 
 - **2026-10-14 PR #1:** Repository, initial handover, Python read-only HID probe and CI.
 - **2026-10-14 PR #2:** Official Mini wired `0x40` direct RGB and `0x41` clear serialization, guarded independent Rust CLI, unit tests, Rust CI and updated setup/research. Branch tests and Clippy passed; **A-key red `0x40` lighting was subsequently confirmed by the owner**. Other features remain unverified. Squash SHA `2ccb9f67d63d`.
-- **2026-10-14 milestone:** Owner confirmed physical **A key turned red**, first hardware validation of the official Mini per-key feature format. Documented on `docs/confirm-a-key-hardware-rgb` for PR. Restore/clear and multi-key tests remain pending.
+- **2026-10-14 PR [#3](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/3):** Owner confirmed physical **A key turned red**, first hardware validation of official Mini per-key lighting. Docs merged to `main` as `71fc653c701fad5f63daa23157c1e09d6d3a03cf`. Restore/clear and multi-key tests remain pending.
 
 ## Rolling documentation convention
 
