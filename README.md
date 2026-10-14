@@ -2,7 +2,7 @@
 
 Native Linux research and driver-development workspace for the **wired SteelSeries Apex Pro Mini (USB `1038:161e`)**, using verified HID observations and local, legally obtained SteelSeries GG resources.
 
-**Current status:** **Verified on real hardware:** A key red, S key green, and `0x41` clear restoring onboard lighting. **New in development:** nine native full-key RGB renderers, including rainbow/wave/breathing and keypress ripple/reactive using a verified physical Linux input node. Whole-board solid blue has been physically verified; **keypress ripple failed to react to keypresses** and its Linux evdev monitoring is being diagnosed and **are not yet certified as exact SteelSeries GG Prism presets**.
+**Current status:** **Hardware-verified:** A key red, S key green, full-keyboard solid blue, `0x41` restoring onboard lighting, and **live keypress-triggered ripple** after installing the Mini-specific input-access fix. Nine native effect renderers are available; the remaining animations, optional systemd background service, and exact SteelSeries GG Prism preset parity require separate testing.
 
 ## Quick start (read-only)
 
@@ -67,7 +67,7 @@ Effects currently available: **solid, gradient, rainbow, wave, breathing, color-
 
 ## Linux keypress monitoring (diagnostics and optional daemon)
 
-The first ripple trial did not react even though solid full-keyboard blue worked. This build improves event monitoring, tries **all** verified Mini keyboard event nodes by default, and adds a read-only diagnostic:
+The first ripple trial failed because Linux denied evdev access, despite working solid full-keyboard RGB. The dedicated Mini input permission fix was followed by **owner-confirmed working ripple**. Input auto-discovery and a read-only diagnostic are also available:
 
 ```bash
 ./target/release/apex-mini-rgb --list-inputs
@@ -87,11 +87,11 @@ systemctl --user enable --now apex-mini-ripple.service
 systemctl --user disable --now apex-mini-ripple.service
 ```
 
-**Important:** the daemon does not by itself solve a broken evdev input stream. Verify `--test-input` before enabling it. See [`docs/SERVICE.md`](docs/SERVICE.md) for permissions and troubleshooting; don't run input monitoring as root by default.
+**Important:** the daemon is optional and has **not yet been owner-verified**. Ripple itself is now working. Check event access and service status before enabling background operation. See [`docs/SERVICE.md`](docs/SERVICE.md) for permissions and troubleshooting; don't run input monitoring as root by default.
 
 ### Arch Linux evdev permissions (required if ripple reports EACCES)
 
-If `--list-inputs` finds the Mini's `/dev/input/eventN` nodes but says **[no read access]**, the keyboard is discoverable but the active session lacks permission to read keypresses. On one owner machine this blocked ripple even while solid blue RGB worked.
+If `--list-inputs` finds the Mini's `/dev/input/eventN` nodes but says **[no read access]**, the keyboard is discoverable but the active session lacks permission to read keypresses. This was the initial confirmed blocker on the development keyboard; the owner subsequently confirmed ripple working after the fix.
 
 ```bash
 bash scripts/install-input-permissions.sh

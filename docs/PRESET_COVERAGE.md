@@ -4,9 +4,9 @@
 
 ## Evidence categories
 
-- **Hardware-confirmed:** the owner observed that A turns red and S turns green via the direct Feature command, and that the Output clear command restores normal lighting.
+- **Hardware-confirmed:** A turns red; S turns green; the full keyboard turns solid blue; the Output clear command restores normal lighting; and **keypress ripple produces visible effects** following the Mini input permission fix.
 - **Implemented with offline tests:** the native effect renderers below, using complete 68-entry frames.
-- **Awaiting live testing:** any animated, full-frame, multi-key, or keypress-driven effects.
+- **Awaiting live testing:** other animated modes, simultaneous multicolor frames, exact physical ripple layout and multi-press behavior, idle/reactive layering, and long-running daemon operation. Full-frame solid color and generic keypress ripple are already observed working.
 - **Not inventoried:** the exact vendor preset list, default gradients, timing curves, palette positions, per-key masks, and GG version differences. **Do not claim parity for any of these until compared against official local data.**
 
 ## First native renderer set
@@ -15,14 +15,14 @@ These are **our provisional descriptive effect names**, not assertions about GG'
 
 | Native effect | Runtime | User settings | Hardware verification |
 |---|---|---|---|
-| `solid` | One static full-keyboard frame | base color, brightness | Pending whole-keyboard test |
+| `solid` | One static full-keyboard frame | base color, brightness | **Verified: entire keyboard solid blue** |
 | `gradient` | Static 2-color left-right blend | base, accent, brightness | Pending |
 | `rainbow` | Animated spatial multi-hue cycle | speed, brightness | Pending |
 | `wave` | Animated moving rainbow wave | speed, brightness | Pending |
 | `breathing` | Whole-keyboard rhythmic brightness | base, speed, brightness | Pending |
 | `color-shift` | Animated blend between two colors | base, accent, speed, brightness | Pending |
 | `sparkle` | Deterministic shimmering individual LEDs | base, accent, speed, brightness | Pending |
-| `ripple` | Physical keydown starts expanding colored spatial ring | base, accent, speed, brightness; **USB input node** | Pending keypress test |
+| `ripple` | Physical keydown starts expanding colored spatial ring | base, accent, speed, brightness; **USB input node** | **Keypress-triggered lighting working (owner-confirmed); exact spatial propagation and GG fidelity pending** |
 | `reactive` | Physical keydown lights pressed LED then fades | base, accent, speed, brightness; **USB input node** | Pending keypress test |
 
 `ripple` and `reactive` use **non-grabbing Linux evdev input** scoped to the identified wired Apex Pro Mini USB device; on Wayland they do not require a compositor-wide hotkey hook. Key data is never logged, persisted, or transmitted. Input-device access depends on local seat/udev permissions.
@@ -53,7 +53,7 @@ The approximate US-60% spatial layout presently used for position-dependent effe
 | rainbow | Base / idle; bitmap flag | Generic rainbow prototype only; **not a parity match** |
 | rainbowSplit | Base / idle | Not matched |
 | reactiveLine | Reactive | Not matched |
-| reactiveRipple | Reactive | Generic ripple prototype only; **not a parity match** |
+| reactiveRipple | Reactive | Native keypress ripple **hardware-confirmed**, but official preset parameters and fidelity **not yet matched** |
 | reactiveSingleKey | Reactive | Generic reactive prototype only; **not a parity match** |
 | redPulse | Needs version-specific inspection | Not matched |
 | selfDestruct | Base / idle | Not matched |
@@ -67,7 +67,7 @@ The approximate US-60% spatial layout presently used for position-dependent effe
 | warpDrive | Base / idle | Not matched |
 | westCoast | Base / idle | Not matched |
 
-The three **reactive** identifiers are especially important for keypress-triggered lighting. Our first `ripple` and `reactive` implementations are infrastructure to reach them; we should replicate the official preset's timing, color, origin and propagation from its authorized local configuration data instead of treating generic effects as finished ports.
+The three **reactive** identifiers are especially important for keypress-triggered lighting. The native ripple infrastructure now works after the device-only udev access fix, but this is not proof of official preset parity. Our first `ripple` and `reactive` implementations are infrastructure to reach them; we should replicate the official preset's timing, color, origin and propagation from its authorized local configuration data instead of treating generic effects as finished ports.
 
 ### Acceptance rules for each official preset
 

@@ -18,7 +18,7 @@ After PR #5, the owner ran `--list-inputs` and `--test-input --seconds 10`. The 
 Permission denied (os error 13)
 ```
 
-This **confirms the immediate blocker is the local Linux input event permissions**, not lack of detected keyboard nodes or failure of the 513-byte RGB command. Ripple has **not yet been observed working** after a permission fix.
+This **confirmed the original blocker was local Linux input permissions**, not the 513-byte RGB command. **Subsequent owner result: “IT WORKS!” on the ripple retest after the scoped permission-fix milestone.** Background service persistence and precise effect fidelity remain untested.
 
 ### Install the device-specific ACL rule (explicit opt-in)
 
@@ -72,6 +72,10 @@ cargo build --release
 Press A, S and Space on the Mini during the 10-second test. Expected mapped HID numbers: A=`4`, S=`22`, Space=`44`. If the output reports 0, **the keyboard events are not reaching the reader**. The diagnostic does not access the RGB interface, issue HID writes, store events or use the network. It prints numeric key IDs on screen *only when explicitly invoked*; don't paste diagnostic results containing sensitive typing.
 
 The reader now monitors **all validated keyboard input nodes** belonging to USB `1038:161e`, rather than guessing one. It rejects unknown keyboard devices and neither intercepts nor grabs input. It handles key down (`EV_KEY value=1`) and ignores key releases and repeats. If permissions prevent reading input nodes, inspect `ls -l /dev/input/eventN`, `getfacl /dev/input/eventN` and active-session ACL/udev setup; don't use root by default.
+
+## Status after the permission fix
+
+The owner reported that ripple works on the wired Apex Pro Mini after the dedicated udev ACL milestone. The initial `EACCES` error is retained above as historical troubleshooting context. **No claim has yet been made that the optional systemd background service has been enabled or tested.**
 
 ## Run ripple manually
 
