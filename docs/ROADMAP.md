@@ -14,13 +14,15 @@ Status as of **2026-10-14**. Completion means stated acceptance criteria have ac
 | 7. Lighting effects and Prism profiles | **Static RGB + native keypress ripple hardware-verified; GG parity still in progress** | After PR #6's Mini-scoped udev ACL, the owner reported **“IT WORKS!”** on ripple retest. Other animations, precise wave geometry, systemd service persistence and 31 official preset matches not yet verified |
 | 8. Read-only device state/firmware status | Not started | Real readback without altering settings |
 | 9. Actuation/Rapid Trigger/remapping | Not started | Independently verified commands and rollback |
-| 10. Package Linux service/application | Not started | Native installation, permissions, regressions and CI |
+| 10. Package Linux service/application | **User service installed and active; lifecycle QA pending** | Owner's `systemctl --user status` shows enabled + active for 4m42s, Mini 513-byte control Feature/65-byte Output, two evdev readers. Visible ripple while daemonized, login persistence, stop restoration, disconnect/reconnect, native installer and full app packaging unverified |
 
 **Confirmed hardware:** A red, S green, clear restoring onboard lighting, and entire keyboard solid blue. **Resolved ripple blocker:** Mini `event11` and `event12` initially failed with `Permission denied (os error 13)`. The scoped input ACL milestone was followed by owner-confirmed **working keypress ripple**. Do not infer exact GG preset fidelity or background daemon reliability from this single live success.
 
 **Latest development:** PR [#4](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/4), squash SHA `570ccddee9c254bd2de28c7e9b1fb62ece192756`, merged full-keyboard effect infrastructure and catalog. **Next hardware gates:** verify optional systemd user service lifecycle, performance and reconnect; test the other animated effects and compare native ripple's spatial behavior to SteelSeries GG. Do not mark these as working before physical feedback.
 
 **Hardware milestone documentation:** [PR #7](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/7) merged as `045b0845561e222983aa9b9db79b77cc912bb7f4`, recording owner-confirmed native ripple operation. Next: verify the optional systemd daemon and exact official preset behavior.
+
+**Latest service test (owner systemd status):** user-level `apex-mini-ripple.service` installed, enabled and running for ~4m42s with two detected evdev readers, the correct vendor HID interface, and no startup error in the displayed log. This verifies **daemon installation/start and liveness**, not actual ripple visual behavior during daemon operation or service reliability after reconnect/login. Next: validate live keypress ripples in the background; then clean stop/clear and reconnect/restart.
 
 ## Input device access and service acceptance criteria
 
@@ -33,8 +35,8 @@ Status as of **2026-10-14**. Completion means stated acceptance criteria have ac
 - Read-only diagnostics identify the correct wired Mini input device(s), with visible A/S/Space keydown codes; no other devices read.
 - **Working native ripple owner-confirmed**. Precise expanding geometry, typing unaffected under load, and exact GG preset parity require separate observations.
 - Repeated presses, held keys and no-press periods behave correctly; no unintended writes after Ctrl+C.
-- Optional `systemd --user` unit runs as the user's UID, never root; auto-restarts after device disconnect and re-enumerates hidraw/event nodes.
-- Service installation remains disabled by default until explicitly enabled. No key contents are persisted or logged.
+- **Observed:** `systemd --user` unit runs under the owner's user slice (UID 1000), enabled and active for ~4m42s. **Not yet observed:** automatic restart after device disconnect and successful hidraw/evdev re-enumeration.
+- Service installation is disabled by default, but **owner explicitly enabled it**, and it is now active. The code does not intentionally persist or log key contents.
 
 ## Comprehensive GG preset parity (long-term requirement)
 
