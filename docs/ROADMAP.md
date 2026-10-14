@@ -20,6 +20,8 @@ Status as of **2026-10-14**. Completion means stated acceptance criteria have ac
 
 **Latest development:** PR [#4](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/4), squash SHA `570ccddee9c254bd2de28c7e9b1fb62ece192756`, merged full-keyboard effect infrastructure and catalog. **Next hardware gates:** verify optional systemd user service lifecycle, performance and reconnect; test the other animated effects and compare native ripple's spatial behavior to SteelSeries GG. Do not mark these as working before physical feedback.
 
+**Hardware milestone documentation:** [PR #7](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/7) merged as `045b0845561e222983aa9b9db79b77cc912bb7f4`, recording owner-confirmed native ripple operation. Next: verify the optional systemd daemon and exact official preset behavior.
+
 ## Input device access and service acceptance criteria
 
 - When a `--list-inputs` scan detects the device but reports `[no read access]`, offer only a dedicated Mini `uaccess` seat ACL rule; avoid `sudo` services, global `input` group grants and world-readable evdev.
