@@ -1,0 +1,9 @@
+# Wired SteelSeries Apex Pro Mini (USB 1038:161e): keyboard event stream
+# needed for reactive / ripple RGB effects. Linux input only; do not grant
+# access to every keyboard or to unrelated devices.
+#
+# Filename MUST precede systemd's 73-seat-late.rules so that the active
+# graphical seat gets a dynamic ACL via TAG+="uaccess".
+# Keystroke access is sensitive: only enable this rule if you want the
+# active local user to be able to read these Mini event devices.
+ACTION!="remove", SUBSYSTEM=="input", KERNEL=="event*", ATTRS{idVendor}=="1038", ATTRS{idProduct}=="161e", ENV{ID_INPUT_KEYBOARD}=="1", MODE="0660", TAG+="uaccess"

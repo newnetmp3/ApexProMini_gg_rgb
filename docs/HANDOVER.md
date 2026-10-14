@@ -2,7 +2,7 @@
 
 **Updated:** 2026-10-14  
 **Repository:** https://github.com/newnetmp3/ApexProMini_gg_rgb  
-**Latest merged milestone:** [PR #5](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/5) merged as `608c668e580ec154065ace5810723f81e9a8bcbb` to `main` (Rust unit tests/Clippy and Python tests green on PR). Adds auto-discovery of Mini evdev keyboard input, read-only `--test-input` diagnostics, and optional user-level systemd ripple service. **Owner observed full keyboard blue, but ripple did not activate before this fix. Live retest pending.**  
+**Latest merged milestone:** PR #5 (`608c668e580ec154065ace5810723f81e9a8bcbb`) brought evdev diagnostics and a user-level service. **Current branch:** `fix/mini-evdev-uaccess`. **Confirmed owner blocker:** `/dev/input/event11` and `event12` are detected, but both return `Permission denied (os error 13)`. This prevents ripple input monitoring. Current milestone adds a device-scoped seat ACL; owner verification pending.  
 **Hardware:** Wired SteelSeries Apex Pro Mini `1038:161e`; owner runs Arch Linux, KDE Wayland.
 
 ## Verified milestones
@@ -13,7 +13,7 @@
 4. **New 2026-10-14 milestone:** extracted and decrypted inherited `base_apex_2022_wired.edevice` and `individually-lit-keyboard.edevice` from the owner's Mac package. Discovered official `direct_write` structure: Feature report of **513 bytes**, `00 40 NN` followed by up to **68 entries** of `[HID,R,G,B]`. The official fixed field has 68 entries; `clear_direct_write` is Output report of **65 bytes**, prefix `00 41`. RGB commands are now derived from official static definitions, not guessed.
 5. Added independent Rust crate `apex-pro-mini-gg-rgb`, with pure serializers, strict HID descriptor and device checks, golden-byte unit tests, and executable `apex-mini-rgb`. The binary defaults to read-only inspection; `--dry-run` never opens a device; live `--write-key` and `--clear` require literal `--confirm-device-write`.
 6. **2026-10-14 hardware verification:** owner confirmed **A red**, **S green**, and **`0x41` clear successfully restoring onboard lighting**. Owner subsequently confirmed **the entire keyboard turned blue** using `--effect solid`. This hardware-verifies whole-board 68-key static RGB frame output.
-7. **2026-10-14 failure:** owner reported **keypress ripple does not occur** after blue full-board lighting worked. Root cause not yet measured: first reader depended on one manually supplied evdev interface and had no read-only keypress diagnostic. Do **not** mark reactive effects as working.
+7. **2026-10-14 failure and confirmed blocker:** Owner reports no keypress ripple; `--list-inputs` finds `/dev/input/event11` and `/dev/input/event12` (both wired Mini) but indicates **no read access**; `--test-input` fails on both with `Permission denied (os error 13)`. Input permissions are **the verified immediate blocker**. Any renderer-level issues remain untested and should not be ruled out until events can be read. Do **not** mark reactive effects working.
 
 ## Safety: do not conflate these conditions
 
@@ -41,15 +41,22 @@
 ## Immediate next work
 
 1. PR #5 merged to `main` with Rust unit tests/Clippy and Python CI green. Check latest main workflow status after docs edits.
-2. Ask owner to run **read-only** `./target/release/apex-mini-rgb --list-inputs` and `./target/release/apex-mini-rgb --test-input --seconds 10`, tapping A, S and Space. Expect HID usages 4, 22 and 44. This isolates evdev event delivery from rendering; do not infer key events from successful static RGB alone.
-3. If the diagnostic observes keydowns, test `--effect ripple --confirm-device-write` (automatically selected Mini event nodes) and verify the visible ring on the board. If no events, inspect selected input node(s), sysfs capabilities and seat ACLs; do not suggest `sudo` blindly.
+2. Owner should opt in to installing `udev/71-apex-pro-mini-input.rules` via `bash scripts/install-input-permissions.sh`. This installs one keyboard-event-specific `TAG+=\"uaccess\"` rule for wired USB `1038:161e` under `/etc/udev/rules.d`; no broad input group, `chmod 666` or root daemon. Reconnect keyboard to refresh ACLs.
+3. Repeat read-only `--list-inputs` and `--test-input --seconds 10`; tap A, S, Space and look for HID codes `4`, `22`, `44`. If access still fails, gather `getfacl`, `udevadm info`, and graphical session/seat status. Only after successful keydown logging should owner retry `--effect ripple --confirm-device-write`; observe physical ripple before calling it working.
 4. Once ripple works, optionally install and enable the explicit `systemd --user` ripple daemon following `docs/SERVICE.md`. Its event stream is transient and unlogged. Check unplug/reconnect and SIGTERM restoring onboard lighting.
 5. Continue exact SteelSeries GG default Prism preset parity using the 31-identifier catalog, with separate physical verification of animation parameters and reactive layout.
+
+## Current permission fix (PR pending): active-seat Mini-only udev rule
+
+- `udev/71-apex-pro-mini-input.rules`: matches `SUBSYSTEM=input`, `event*`, `ID_INPUT_KEYBOARD=1`, USB VID:PID `1038:161e`; sets `MODE=0660` and `TAG+=uaccess` before `73-seat-late.rules`. Limits keypress access to logged-in active seat ACL rather than the global `input` group.
+- `scripts/install-input-permissions.sh`: explicit local installer requiring `sudo` only for one rule + udev reload; **does not start the service**. Reconnect keyboard after installation.
+- `tests/test_udev_rule.py`: assertions preventing broad rules or ordering regressions.
+- **Pending:** owner access/keypress verification (A/S/Space) and actual visible ripple. This change is not a hardware-verified fix yet.
 
 ## Latest merged fix — PR #5 reactive evdev monitoring and user daemon
 
 - **Known input:** real 68-key full board solid blue; ripple keypress detection failed.
-- **Root-cause hypothesis (not yet verified):** wrong/idle manual evdev interface or missing evdev visibility; now reads all valid keyboard nodes and exposes a read-only keydown diagnostic.
+- **Confirmed 2026-10-14 permission failure:** the PR #5 diagnostic identifies two Mini event nodes but cannot open either (`EACCES`). No keydown events can reach the renderer until input permissions are addressed.
 - **New code merged:** `src/input.rs` multi-reader, strict wired Mini selection, keydown parser and reader-stop notification; `src/animate.rs` auto-input and bounded diagnostic; `src/main.rs` dispatch; optional service unit and installer. **Rust/Clippy and Python PR CI green.**
 - **Safety:** daemon is opt-in; no input grabs, no key contents logged to service output, no root process, explicit HID write confirmation in service ExecStart; service stops with known `0x41` clear.
 

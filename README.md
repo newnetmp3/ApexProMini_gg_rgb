@@ -89,6 +89,19 @@ systemctl --user disable --now apex-mini-ripple.service
 
 **Important:** the daemon does not by itself solve a broken evdev input stream. Verify `--test-input` before enabling it. See [`docs/SERVICE.md`](docs/SERVICE.md) for permissions and troubleshooting; don't run input monitoring as root by default.
 
+### Arch Linux evdev permissions (required if ripple reports EACCES)
+
+If `--list-inputs` finds the Mini's `/dev/input/eventN` nodes but says **[no read access]**, the keyboard is discoverable but the active session lacks permission to read keypresses. On one owner machine this blocked ripple even while solid blue RGB worked.
+
+```bash
+bash scripts/install-input-permissions.sh
+# Disconnect and reconnect the keyboard to apply the udev rule.
+./target/release/apex-mini-rgb --list-inputs
+./target/release/apex-mini-rgb --test-input --seconds 10
+```
+
+This explicitly installs a **Mini-only** `uaccess` seat ACL rule to `/etc/udev/rules.d/`, requiring `sudo` just for that file. It does not grant broad input-device access or start the daemon. Only enable the daemon after confirming actual A/S keypress events. [Detailed diagnosis and security notes](docs/SERVICE.md).
+
 ## Source repositories
 
 - [steelseriesgg-rs](https://github.com/Ven0m0/steelseriesgg-rs): native Rust GG replacement; generic transport patch preserved in `patches/`.
