@@ -80,6 +80,17 @@ The `heatmap` source defines an actuation-triggered special effect with its own 
 
 Unit tests cover distinct row palettes, mask selection, 31 historical IDs, and full frame encoding. This is a **partial port of regional parameters**, not reproduction of GG's complete underlying graphics compositor.
 
+## Read-only SVG regression gallery (remote QA)
+
+The `prism-preview` executable evaluates **all 31 selectors at three different animation times** and draws each of the Mini's 68 logical LEDs in a standalone SVG page. Reactive modes receive only synthetic A-keypress data in memory. It never opens `/dev/hidraw`, `/dev/input`, a Wayland/X11 display, or network sockets.
+
+```bash
+cargo run --release --bin prism-preview -- --output prism-presets-preview.svg
+# Open prism-presets-preview.svg in any browser or image viewer.
+```
+
+The GitHub Actions `Rust protocol checks` workflow also uploads `apex-mini-prism-factory-previews` as an artifact, useful for remote review without a graphical session or the physical keyboard. This is a **visual regression baseline**, not an official SteelSeries screenshot or proof of exact effect fidelity. Compare revisions by the same time/key matrix; later match against recorded GG behavior.
+
 ## Safe operation
 
 All rendering/unit tests and `--preview-effect` commands are device-independent and read-only. Actual user service commands still explicitly require `--confirm-device-write`, device VID/PID + HID report checks and Mini-only evdev permissions. No official SteelSeries package, encryption passphrase, decrypted descriptors, original preset JSON or SQL has been committed.
