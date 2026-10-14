@@ -20,7 +20,7 @@ Status as of **2026-10-14**. Completion means stated acceptance criteria have ac
 
 ## Comprehensive GG preset parity (long-term requirement)
 
-The target is **all default presets shipped by official SteelSeries GG Prism**, not merely a few similar-looking effects. First inventory the actual shipped preset catalog for specific GG versions from authorized local installation assets and record names, palettes, timing curves, key masks, base/idle/reactive layering and variants. Implement each independently with comparison tests, plus keyboard layout editor and profile persistence. Track parity case-by-case in [`docs/PRESET_COVERAGE.md`](PRESET_COVERAGE.md). Do not mark any provisional native effect as an exact official preset until visually and behaviorally validated.
+The target is **all default presets shipped by official SteelSeries GG Prism**, not merely a few similar-looking effects. The Mac GG 108.3 Prism SQL migrations yielded **31 unique preset identifier keys** (documented separately), but the actual current UI list and behavioral details still require verification. Inventory other GG versions and record palettes, timing curves, key masks, base/idle/reactive layering and variants. Implement each independently with comparison tests, plus keyboard layout editor and profile persistence. Track parity case-by-case in [`docs/PRESET_COVERAGE.md`](PRESET_COVERAGE.md). Do not mark any provisional native effect as an exact official preset until visually and behaviorally validated.
 
 ## Engineering quality gates
 
