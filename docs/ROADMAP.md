@@ -11,7 +11,7 @@ Status as of **2026-10-14**. Completion means stated acceptance criteria have ac
 | 4. Establish Mini-specific RGB serializer | **Static specification verified** | New inherited `base_apex_2022_wired` confirms `0x40` Feature, `0x41` Output and field layouts |
 | 5. Implement independent Rust Mini codec | **Complete — PR #2** | Squash SHA `2ccb9f67d63d`; bounded frame builders, golden-byte unit tests, guarded device selection, Rust tests and Clippy green on branch |
 | 6. Verify real Mini static RGB/per-key selection | **Whole-board solid RGB hardware verified** | A red, S green, `0x41` clear restored, **all physical keys turned blue**. Different simultaneous colors and layout fidelity still pending |
-| 7. Lighting effects and Prism profiles | **Static verified; evdev access blocker confirmed** | Owner's Mini `event11`/`event12` were detected but `EACCES` prevented reading any keypresses. Device-scoped `71-` `uaccess` rule and explicit installer being added; ripple hardware retest pending |
+| 7. Lighting effects and Prism profiles | **RGB solid verified; PR #6 input ACL merged, untested on hardware** | Owner's Mini `event11`/`event12` returned `EACCES`. Device-only `71-` uaccess rule & explicit installer merged as `e22b2c4d`; owner must install/reconnect and confirm keypress detection and visible ripple |
 | 8. Read-only device state/firmware status | Not started | Real readback without altering settings |
 | 9. Actuation/Rapid Trigger/remapping | Not started | Independently verified commands and rollback |
 | 10. Package Linux service/application | Not started | Native installation, permissions, regressions and CI |
