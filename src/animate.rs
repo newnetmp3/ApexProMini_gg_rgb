@@ -4,6 +4,9 @@
 use apex_pro_mini::effects::{self, Config, KeyHit, Preset, PRESET_NAMES};
 use apex_pro_mini::{encode_clear_direct_write, encode_direct_write, rgb_from_hex};
 use apex_pro_mini::input::{self, InputMessage};
+use apex_pro_mini::profile::Profile;
+use apex_pro_mini::Rgb;
+use std::collections::BTreeMap;
 use std::sync::mpsc::{RecvTimeoutError, TryRecvError};
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -39,6 +42,7 @@ struct Options {
     input: Option<PathBuf>,
     confirmed: bool,
     preview: bool,
+    overrides: BTreeMap<u8, Rgb>,
 }
 
 fn parse_args(args: &[String]) -> Result<Options, String> {
@@ -57,7 +61,9 @@ fn parse_args(args: &[String]) -> Result<Options, String> {
         input: None,
         confirmed: false,
         preview,
+        overrides: BTreeMap::new(),
     };
+    let mut profile_file = None::<PathBuf>;
     let mut index = 2;
     while index < args.len() {
         let flag = &args[index];
@@ -97,9 +103,20 @@ fn parse_args(args: &[String]) -> Result<Options, String> {
                 }
             }
             "--input" => options.input = Some(PathBuf::from(value)),
+            "--profile" => {
+                if profile_file.is_some() { return Err("Only one --profile is allowed".into()); }
+                profile_file = Some(PathBuf::from(value));
+            },
             _ => return Err(format!("Unknown flag {flag}")),
         }
         index += 2;
+    }
+    if let Some(path) = profile_file {
+        let stored = Profile::load(&path)?;
+        options.preset = stored.preset;
+        options.config = stored.config;
+        options.fps = stored.fps;
+        options.overrides = stored.key_overrides;
     }
     if options.preview && options.confirmed {
         return Err("Preview is always read-only; omit --confirm-device-write".into());
@@ -169,7 +186,12 @@ fn run_animation(options: Options) -> Result<(), String> {
             }
             hits.retain(|hit| elapsed - hit.when < 2.5);
         }
-        let colors = effects::frame(options.preset, options.config, elapsed, &hits);
+        let mut colors = effects::frame(options.preset, options.config, elapsed, &hits);
+        for key in &mut colors {
+            if let Some(rgb) = options.overrides.get(&key.hid) {
+                key.rgb = *rgb;
+            }
+        }
         let packet = match encode_direct_write(&colors) {
             Ok(report) => report,
             Err(e) => break Err(e),
@@ -282,7 +304,12 @@ pub fn run_effect(args: &[String]) -> Result<(), String> {
     }
     let options = parse_args(args)?;
     if options.preview {
-        let colors = effects::frame(options.preset, options.config, 0.5, &[]);
+        let mut colors = effects::frame(options.preset, options.config, 0.5, &[]);
+        for key in &mut colors {
+            if let Some(rgb) = options.overrides.get(&key.hid) {
+                key.rgb = *rgb;
+            }
+        }
         let packet = encode_direct_write(&colors)?;
         println!("Preview {:?} at t=0.5 s ({} keys)", options.preset, colors.len());
         print_bytes(&packet);
@@ -313,5 +340,6 @@ mod tests {
         assert!(parse(&["--effect", "wave", "--fps", "999", "--confirm-device-write"]).is_err());
         assert!(parse(&["--effect", "wave", "--speed", "NaN", "--confirm-device-write"]).is_err());
         assert!(parse(&["--effect", "wave", "--input", "/dev/input/event2", "--confirm-device-write"]).is_err());
+        assert!(parse(&["--effect", "ripple", "--profile", "/definitely-not-here", "--confirm-device-write"]).is_err());
     }
 }
