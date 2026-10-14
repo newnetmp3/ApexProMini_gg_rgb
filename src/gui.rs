@@ -4,6 +4,7 @@
 use apex_pro_mini::effects::{self, KeyHit, Preset};
 use apex_pro_mini::profile::{color_hex, default_profile_path, Profile};
 use apex_pro_mini::Rgb;
+use apex_pro_mini::factory;
 use eframe::egui::{self, Color32, FontId, Pos2, Rect, Sense, Vec2};
 use std::process::Command;
 use std::time::Instant;
@@ -264,6 +265,21 @@ impl eframe::App for ControlCenter {
             self.dirty |= ui.add(egui::Slider::new(&mut self.profile.config.brightness, 0.0..=1.0).text("Brightness")).changed();
             self.dirty |= ui.add(egui::Slider::new(&mut self.profile.fps, 5..=40).text("FPS")).changed();
             ui.separator();
+            ui.collapsing("SteelSeries GG factory-style previews (31)", |ui| {
+                ui.small("Recreated palettes/timing; compositor, regions and fidelity remain unverified.");
+                egui::ScrollArea::vertical().max_height(245.0).show(ui, |ui| {
+                    for (index, spec) in factory::PRESETS.iter().enumerate() {
+                        if ui.selectable_value(
+                            &mut self.profile.preset,
+                            Preset::Factory(index as u8),
+                            format!("{} · {} ms", spec.id, spec.period_ms),
+                        ).changed() {
+                            self.dirty = true;
+                        }
+                    }
+                });
+            });
+            ui.separator();
             ui.heading("Service controls");
             if ui.button("Save profile (no device change)").clicked() { self.action("save"); }
             if ui.button("Apply & restart lighting").clicked() { self.action("apply"); }
@@ -280,14 +296,12 @@ impl eframe::App for ControlCenter {
             ui.add_space(8.0);
             ui.checkbox(&mut self.show_catalog, "Show SteelSeries GG preset migration catalog (31 identifiers)");
             if self.show_catalog {
-                ui.label("Historical identifiers, not verified GG defaults. Unmatched presets cannot yet be applied.");
+                ui.label("These historical entries are now selectable as parameter-derived previews. None is certified as faithful GG parity.");
                 egui::ScrollArea::vertical().max_height(185.0).show(ui, |ui| {
                     egui::Grid::new("catalog").striped(true).show(ui, |ui| {
                         for id in GG_IDS {
-                            let is_proto = matches!(*id, "rainbow" | "reactiveRipple" | "reactiveSingleKey" | "comet" | "heatmap" | "rainbowSplit" | "reactiveLine" | "prism");
                             ui.monospace(*id);
-                            ui.label(if is_proto { "Native prototype — parity not established" }
-                                else { "Not yet ported" });
+                            ui.label("Parameter-derived preview · fidelity unverified");
                             ui.end_row();
                         }
                     });
