@@ -58,7 +58,7 @@ Added a reusable `base + idle + reactive` pure lighting compositor, compatible w
 
 ## Automated offline visual verification
 
-**Working branch `feature/headless-prism-visual-regression`:** optional read-only binary `prism-preview` renders a complete SVG sheet with **31 factory-style modes × three phases**, including synthetic keypress samples for reactive presets. GitHub Actions uploads a downloadable `apex-mini-prism-factory-previews` artifact. This supports remote inspection and regression review with no keyboard or graphical desktop. Initial generator CI/PR acceptance pending.
+**Merged in [PR #11](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/11), SHA `45d9bb363cfc5518c6659e2c07b93808abe522a3`:** read-only binary `prism-preview` renders a complete SVG sheet with **31 factory-style modes × three phases**, including synthetic keypress samples for reactive presets. GitHub Actions uploads a downloadable `apex-mini-prism-factory-previews` artifact. This supports remote inspection and regression review with no keyboard or graphical desktop. Generator Rust/GUI/Python CI green and gallery artifact successfully uploaded to GitHub Actions. Actual GG visual fidelity is still not verified.
 
 **Next fidelity gates** after the gallery: GG foreground/background/aperture compositor, six-row to Mini-five-row coordinate calibration, analog Hall sensor readback, timing/opacity matching and device-side comparisons. SVG color regression is **not** proof of true vendor parity.
 
