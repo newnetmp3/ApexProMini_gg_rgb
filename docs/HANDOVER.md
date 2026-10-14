@@ -23,7 +23,7 @@
 
 10. **Background ripple hardware-confirmed in user daemon:** owner explicitly answered **“yes”** when asked whether pressing keys causes visible ripples while `apex-mini-ripple.service` is running. Combined with the earlier systemd status, this verifies service-owned keypress-reactive RGB (not only manual CLI). No reboot/unplug or stop/clear lifecycle test has been supplied yet.
 
-11. **2026-10-14 factory catalog conversion (branch, CI pending):** parsed GG's Prism migration resources privately; **30 actual preset records** plus one newer `redPulse` rename (`faze`). Independent Rust factory interpreter includes authentic first-variant functional RGB palette stops, animation durations, signed spatial wavelength and phase category for all 31 historical identifiers, plus 68-key rendering tests. **Not a full copy of the vendor effects engine:** eight records use multiple masked layout variants and several use backgrounds/apertures not yet faithfully modeled. Added pure `base + idle + reactive` compositor and `version=1` profile fields without changing the Mini HID writer or the earlier default ripple behavior.
+11. **2026-10-14 factory catalog conversion (branch, CI pending):** parsed GG's Prism migration resources privately; **30 actual preset records** plus one newer `redPulse` rename (`faze`). Independent Rust factory interpreter includes authentic first-variant functional RGB palette stops, animation durations, signed spatial wavelength and phase category for all 31 historical identifiers, plus 68-key rendering tests. **Not a full copy of the vendor effects engine:** eight records have **36 additional masked layout variants now implemented as approximate row/column selections**; several records have backgrounds/apertures that are still not modeled faithfully. Added pure `base + idle + reactive` compositor and `version=1` profile fields without changing the Mini HID writer or the earlier default ripple behavior.
 
 ## Safety: do not conflate these conditions
 
@@ -62,7 +62,7 @@
 ## Immediate next work — effects only while owner is remote
 
 1. Verify `feature/prism-factory-presets-dataset` CI (Rust unit tests, Clippy, GUI compile, Python) and merge PR only when green; update both rolling docs with actual PR and SHA.
-2. Extend source-derived first-region effects to all **8 multi-variant historical presets** (`wabashAndLake`, `rainbow`, `colorFusion`, `aqua`, `freeway`, `comet`, `pride`, `twilight`). Build and test an accurate physical Mini key-mask map; do not just assume the default variant matches all rows/regions.
+2. **36 source-derived alternate region variants are now implemented** for the eight known multi-variant presets. Next, calibrate the six-row Prism source coordinate masks to the Mini's five physical rows and HID keys. Existing selection is approximate; do not claim exact variant fidelity.
 3. Implement more of GG's graphics compositor features (foreground/background/aperture, opacity, z order, repetitions, origins) from independent model descriptions, avoiding published proprietary JSON.
 4. Extend exact reactive and heatmap configuration to the original duration/threshold semantics. Confirm responsiveness and retain **no keystroke logging**.
 5. Preserve existing working daemon and `--effect ripple` defaults. Save physical GUI/per-key effects validation for when owner returns to the keyboard.
@@ -117,6 +117,8 @@
 - **2026-10-14 PR [#9](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/9):** Native eframe/egui GUI, 14 independent effect modes, per-key RGB paint overrides, validated on-disk profile and profile-aware single-writer daemon. Linux GUI compile + Rust tests/Clippy + Python CI passed. Squash SHA `edf7e45a8082a87b6ebf3e5119afc96f30684248`. GUI/runtime **hardware acceptance is pending**.
 
 - **2026-10-14 factory conversion (in progress, branch `feature/prism-factory-presets-dataset`):** recovered the 30 complete Prism preset records and the GG106 redPulse/faze rename; authored 31 historical selectors (`gg:<name>`), local palette/timing previews and a pure layered compositor. CI and merge pending. No owner's live keyboard available for these newly added effects.
+
+- **2026-10-14 regional preset stage (pending PR):** Added `src/regions.rs` with 36 additional masked source variants from the owner's GG 108.3 migrations. Factory rendering now selects by approximate Mini row/column and falls back to unmasked base. Exact position calibration and vendor layer compositing remain pending.
 
 ## Rolling documentation convention
 
