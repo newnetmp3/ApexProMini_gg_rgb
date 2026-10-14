@@ -42,6 +42,10 @@ The source data was recovered from the owner's GG 108.3 Prism SQL migrations and
 
 **Parity is incomplete:** **36 extra regional variants now source-parameterized but physically uncalibrated**, actual GG foreground/background/aperture compositor, reactive/heatmap thresholds, and device-side visual matching. Neither working preview nor compile success constitutes a verified vendor preset port. [Detailed engineering audit](FACTORY_PRESETS.md).
 
+## Reusable graphic compositor foundation
+
+The independent pure Rust compositor now supports ordered graphic layers, four blend modes, alpha, per-layer spatial origin/rotation/scale, repetition/phase shifts and masked apertures. West Coast, Haze, and Warp Drive factory-style previews have been migrated onto this engine, keeping source-derived functional colors and periods. Offline tests make this inspectable while the user is remote. **This is a new approximation, not exact vendor aperture-mask fidelity.** See [`docs/COMPOSITOR.md`](COMPOSITOR.md).
+
 ## Native GUI foundation
 
 The first `apex-mini-gui` (Rust eframe/egui) editor exposes fourteen native renderer prototypes (original nine, plus comet, mirrored rainbow, prismatic sweep, keypress heatmap, and reactive line), a simulated keyboard-map preview, validated color/timing controls, and static overrides painted onto individual keys. It controls the **single already-working systemd user daemon** through a saved per-user profile, never writing HID concurrently. A 31-identifier historical GG preset catalog is visible in the GUI **as parameter-derived, not parity-certified factory-style previews**, not as 31 finished GG equivalents.
