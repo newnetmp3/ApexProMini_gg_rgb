@@ -105,6 +105,14 @@ The new independent `src/graphics.rs` interprets those functional fields with a 
 
 See [`docs/COMPOSITOR.md`](COMPOSITOR.md) for algorithm documentation and exact remaining acceptance criteria. **These controls are independently defined; they do not mean the historical GG shader code, layer metadata, opacity settings, or physical key layout has been reproduced correctly.**
 
+## Factory reactive trigger-period stage
+
+A new pure `src/reactive_factory.rs` independently models three GG source-named modes with the nominal 250/500/1250ms periods: radial `reactiveRipple`, row-constrained `reactiveLine`, and isolated pressed-key `reactiveSingleKey`. Each pulse has bounded fading and an exact expiration; repeated and simultaneous events combine without overdriving any RGB channel.
+
+To avoid prematurely dropping long source-period key animations at slow profile speed, `Stack::key_history_seconds` informs the daemon's in-memory pruning threshold and the GUI's simulated reactive preview. A Single Key animation slowed to 0.1× now retains its event for up to 12.5 seconds, rather than the earlier 2.5-second cutoff. The owner-confirmed independent native `ripple` retains its original lifetime and rendering.
+
+Offline SVG gallery phases are now sampled **relative to each GG reactive source period**, rather than using identical absolute sample times. All remains device-independent; **actual SteelSeries GG aperture geometry, interpolation, speed semantics, layer priority and fade curve parity are still unknown and should not be claimed**. See [`docs/REACTIVE_FACTORY.md`](REACTIVE_FACTORY.md).
+
 ## Safe operation
 
 All rendering/unit tests and `--preview-effect` commands are device-independent and read-only. Actual user service commands still explicitly require `--confirm-device-write`, device VID/PID + HID report checks and Mini-only evdev permissions. No official SteelSeries package, encryption passphrase, decrypted descriptors, original preset JSON or SQL has been committed.
