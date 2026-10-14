@@ -3,7 +3,7 @@
 **Updated:** 2026-10-14  
 **Repository:** https://github.com/newnetmp3/ApexProMini_gg_rgb  
 **Latest merged milestone:** [PR #8](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/8), squash SHA `b53923e1228a7af9da0c3f5c226e1f402b8b7705`, documenting owner-verified active/enabled systemd user daemon with two Mini evdev readers. Rust and Python PR checks passed. **Owner's subsequent report: “IT WORKS!” in response to the ripple retest. Keypress-triggered ripple is now hardware-confirmed.** **The owner has now installed, enabled, and observed the systemd user service active and running for 4m42s** (user@1000; PID 561326); it detected the correct `0xffc0` 513-byte Feature/65-byte Output interface and started two Mini evdev readers. **User explicitly confirmed that keypress ripple works with the systemd service running**. Login persistence, physical USB reconnect, and clean stop/clear are separate outstanding QA gates.  
-**Current feature branch:** `feature/native-prism-gui-profile-engine` — GUI and profile-aware systemd integration; no GG preset-parity claims yet.  
+**Latest merged development milestone:** [PR #9](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/9), squash SHA `edf7e45a8082a87b6ebf3e5119afc96f30684248`. The native Rust desktop GUI, 14-effect prototype engine, strict saved profiles/per-key overrides and profile-aware single-writer systemd service are on `main`. **GUI compile, Rust tests/Clippy and Python CI passed; owner's KDE GUI/edited-profile hardware acceptance is still pending.**  
 **Hardware:** Wired SteelSeries Apex Pro Mini `1038:161e`; owner runs Arch Linux, KDE Wayland.
 
 ## Verified milestones
@@ -46,7 +46,7 @@
 - `.gitignore`: vendor binaries, decrypted descriptors, captures, firmware and credentials excluded.
 - `patches/steelseriesgg-rs-hid-report-fix.patch`: earlier locally verified upstream transport patch.
 
-## Current milestone: native GUI + saved effect profiles (feature/native-prism-gui-profile-engine)
+## Latest merged milestone — PR #9 native GUI and saved effect profiles
 
 - **Owner-verified baseline:** manual RGB per-key and whole-board solid, direct-mode restore, keypress ripple, **and keypress ripple from the background `systemd --user` service**.
 - **New engine:** `src/profile.rs` strictly validates versioned `key=value` RGB profiles, including speed, brightness, frame rate and per-key HID overrides; saves atomically. No keystrokes or GG proprietary assets stored.
@@ -54,11 +54,11 @@
 - **Native GUI:** optional `eframe` feature and `apex-mini-gui` binary (`src/gui.rs`) with **fourteen** selectable native effect algorithms (original nine plus comet, rainbow split, prismatic sweep, heatmap and reactive line), live simulated key-map preview, per-key RGB painting, color pickers, speed/brightness/FPS, save/apply and service start/stop/enable controls. It does **not** write HID itself; the user daemon remains the sole writer.
 - **GUI install:** `bash scripts/install-gui.sh` compiles GUI, upgrades the profile-aware user daemon and installs a KDE-compatible `.desktop` launcher. No root daemon. `docs/GUI.md` specifies QA steps and limitations.
 - **Known parity gap:** 31 SteelSeries GG migration preset identifiers are indexed and fourteen native algorithms exist, but most factory parameters and effects are not yet faithfully reproduced. Native presets are independent prototypes, not a faithful port yet.
-- **Verification:** run headless Rust tests + Clippy and optional GUI compilation CI before PR merge. User must then validate the actual Plasma GUI and service interactions.
+- **Verification:** **PR #9 GitHub Actions passed** for headless Rust unit tests + Clippy, optional Linux/Wayland/X11 GUI compile, and Python diagnostics. Owner must still validate actual Plasma window and profile application on real hardware.
 
 ## Immediate next work
 
-1. Run and fix CI for the **optional eframe GUI**, headless CLI, strict profile decoder and Python udev tests; merge feature PR only after green.
+1. **PR #9 merged and CI green:** GUI compiled under Linux/Wayland/X11 and headless Rust tests/Clippy/Python diagnostics passed. No GUI hardware acceptance yet.
 2. Ask owner to pull and run `bash scripts/install-gui.sh`. It updates the profile-aware user service while leaving the existing instance alone. Launch **Apex Mini Prism** from KDE or run `~/.local/bin/apex-mini-gui`.
 3. Owner tests GUI **Save** (no hardware change), **Apply & restart** (single-writer systemd), solid colors, animated effects, per-key overrides, and ripple; confirm no regressions.
 4. Verify service `Stop` restores onboard lighting, re-enabling profile works, saved settings survive login, and later physical USB disconnect/reconnect.
@@ -110,7 +110,7 @@
 - **2026-10-13 PR [#8](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/8):** Recorded owner-confirmed background user daemon startup/enabled/running, stable 4m42s status and Mini input endpoints; Rust and Python checks passed. Squash SHA `b53923e1228a7af9da0c3f5c226e1f402b8b7705`. Visible ripple under the daemon, reconnect and stop-cleanup require follow-up tests.
 
 - **2026-10-13 user daemon validation:** Owner confirmed visible keypress ripple while the enabled systemd user service was running, resolving the separate daemon-animation acceptance gate. Reconnect/logout/stop not yet tested.
-- **2026-10-14 GUI milestone (work in progress):** Native eframe editor + profile-backed daemon service + editable key overrides, with `docs/GUI.md`; compile/unit CI and owner desktop acceptance pending.
+- **2026-10-14 PR [#9](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/9):** Native eframe/egui GUI, 14 independent effect modes, per-key RGB paint overrides, validated on-disk profile and profile-aware single-writer daemon. Linux GUI compile + Rust tests/Clippy + Python CI passed. Squash SHA `edf7e45a8082a87b6ebf3e5119afc96f30684248`. GUI/runtime **hardware acceptance is pending**.
 
 ## Rolling documentation convention
 
