@@ -1,0 +1,21 @@
+[Unit]
+Description=Apex Pro Mini native reactive RGB ripple (user service)
+Documentation=https://github.com/newnetmp3/ApexProMini_gg_rgb/blob/main/docs/SERVICE.md
+After=graphical-session.target
+StartLimitIntervalSec=60
+StartLimitBurst=10
+
+[Service]
+Type=simple
+# This is the user's own compiled executable, not SteelSeries GG or a root daemon.
+ExecStart=%h/.local/bin/apex-mini-rgb --effect ripple --fps 24 --color 081020 --accent ff5500 --confirm-device-write
+Restart=on-failure
+RestartSec=4
+TimeoutStopSec=5
+# Never intentionally save or log keypress data.
+StandardOutput=journal
+StandardError=journal
+NoNewPrivileges=yes
+
+[Install]
+WantedBy=default.target
