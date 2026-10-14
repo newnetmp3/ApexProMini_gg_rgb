@@ -62,7 +62,42 @@ Important: `--effect` and `--preview-effect` are different. Preview does not ope
 
 The new renderer uses approximate key geometry including international layouts. Per-key ripple positioning needs keyboard-side confirmation; the input reader never writes files, grabs keys, or records typed strings. `Ctrl+C` or `SIGTERM` attempts `0x41` clear to restore onboard lighting; a crash or hard kill cannot guarantee restoration.
 
-## 4. Work on the upstream transport separately
+## 4. Diagnose physical keypresses before running ripple
+
+The owner **verified full-keyboard solid blue** but did **not** see a ripple on keypress. Use the new independent, **read-only** input test to distinguish input delivery from effect rendering:
+
+```bash
+./target/release/apex-mini-rgb --list-inputs
+./target/release/apex-mini-rgb --test-input --seconds 10
+```
+
+Press A, S and Space on the wired Mini during the test. Expected USB HID usages: 4, 22 and 44. This test **never opens hidraw or writes RGB**. It temporarily prints numeric key IDs to the console only when requested, with no saved logs or network requests. Don't type sensitive information into the diagnostic.
+
+The updated ripple effect now automatically opens **every verified Mini keyboard evdev node**, rather than relying on manually picking a single USB interface:
+
+```bash
+./target/release/apex-mini-rgb --effect ripple --color 081020 --accent ff5500 --confirm-device-write
+```
+
+If the read-only test sees zero events, do **not** assume this command will work. First inspect `--list-inputs` and permissions (e.g. `getfacl /dev/input/eventN`) and report the result. The input reader does not grab the keyboard and normal typing is not interrupted.
+
+## 5. Optional background ripple service
+
+```bash
+# Copies locally compiled binary and systemd user unit; does not enable it.
+bash scripts/install-user-service.sh
+
+# Only after confirming evdev keypress detection:
+systemctl --user enable --now apex-mini-ripple.service
+systemctl --user status apex-mini-ripple.service
+
+# Stop, disable, restore onboard lighting:
+systemctl --user disable --now apex-mini-ripple.service
+```
+
+No root daemon. The service runs under your normal user account, restarts after errors and re-discovers USB paths, and does **not log keypress contents**. See [`docs/SERVICE.md`](SERVICE.md).
+
+## 6. Work on the upstream transport separately
 
 The owner has an existing `steelseriesgg-rs` checkout, with the transport patch already applied; **do not reapply it blindly**. For a clean upstream clone, inspect and apply the patch:
 
@@ -77,7 +112,7 @@ cargo build --release
 
 If `git apply --check` fails, inspect `git diff` before continuing: the upstream patch may already be present. Never reset a modified worktree just to apply this patch.
 
-## 5. Local-only GG descriptor decryption
+## 7. Local-only GG descriptor decryption
 
 This research used the owner's own GG Windows `SteelSeriesEngine.exe` and macOS `.edevice` assets. Do **not** commit those files, the recovered passphrase, or decrypted plaintext. `.private/` is excluded by `.gitignore`.
 
@@ -102,10 +137,10 @@ This produces `.private/apex_pro_mini.edevice.scm` with owner-only permissions, 
 
 Only make independent protocol notes and original implementation code public; do not paste the decrypted source into issues, commits, or PRs.
 
-## 6. Hardware write policy
+## 8. Hardware write policy
 
-Only the explicit Rust CLI commands `--write-key`, `--clear` and `--effect` can write to the keyboard, and only with `--confirm-device-write`. The default discovery and dry-run commands remain read-only. Mini's observed Feature report is 513 bytes: the experimental 645-byte TKL-2023 packet is **incompatible**, and must not be forced or truncated. Do not attempt firmware update, unknown HID command fuzzing, or actuation settings changes. New write-capable tests must be opt-in and independently verified first.
+Only the explicit Rust CLI commands `--write-key`, `--clear` and `--effect` can write to the keyboard, and only with `--confirm-device-write`. The user can explicitly enable the provided systemd user unit whose ExecStart includes that confirmation; service installation alone does not change lighting. The default discovery and dry-run commands remain read-only. Mini's observed Feature report is 513 bytes: the experimental 645-byte TKL-2023 packet is **incompatible**, and must not be forced or truncated. Do not attempt firmware update, unknown HID command fuzzing, or actuation settings changes. New write-capable tests must be opt-in and independently verified first.
 
-## 7. Development handover
+## 9. Development handover
 
 After every meaningful implementation milestone, update `docs/HANDOVER.md` **and** `docs/ROADMAP.md` together with tests and evidence. Use `docs/PROTOCOL.md` to separate confirmed bytes from hypotheses.
