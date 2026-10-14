@@ -12,13 +12,13 @@
 3. GG 108.3 macOS and 121.0 Windows installers were supplied privately, along with extracted Windows `SteelSeriesEngine.exe`. Using the independently researched `steelpatcher` technique, passphrase extraction succeeded and encrypted Mini device definitions decrypted. Proprietary assets and secrets stay out of Git.
 4. **New 2026-10-14 milestone:** extracted and decrypted inherited `base_apex_2022_wired.edevice` and `individually-lit-keyboard.edevice` from the owner's Mac package. Discovered official `direct_write` structure: Feature report of **513 bytes**, `00 40 NN` followed by up to **68 entries** of `[HID,R,G,B]`. The official fixed field has 68 entries; `clear_direct_write` is Output report of **65 bytes**, prefix `00 41`. RGB commands are now derived from official static definitions, not guessed.
 5. Added independent Rust crate `apex-pro-mini-gg-rgb`, with pure serializers, strict HID descriptor and device checks, golden-byte unit tests, and executable `apex-mini-rgb`. The binary defaults to read-only inspection; `--dry-run` never opens a device; live `--write-key` and `--clear` require literal `--confirm-device-write`.
-6. **No hardware command has yet been tested from this new crate**. Source and public docs contain no proprietary GG files.
+6. **2026-10-14 first live success:** the owner ran the RGB hardware test and reported **“IT WORKED! ‘A’ turned red!”**. This establishes a real, visible LED response for **one A key** from the dedicated Mini `0x40` Feature-report path. The user did **not** yet report whether `--clear` (`0x41`) restores onboard lighting, or whether other keys and simultaneous multi-key colors work. Source and public docs contain no proprietary GG files.
 
 ## Safety: do not conflate these conditions
 
 - **Statically verified:** command `0x40` / `0x41` report formats, key slot count and HID report types.
-- **Hardware observed:** correct endpoint/report lengths; generic `0x21` does not change Mini RGB.
-- **Unverified:** whether directly sending the spec-derived `0x40` command changes visible LEDs, and any session initialization, profile or timing requirements. Do not mark milestone 6 complete until owner reports actual illumination.
+- **Hardware observed:** correct endpoint/report lengths; generic `0x21` does not change Mini RGB; **one A-key `0x40` RGB write visibly turned the A key red**.
+- **Unverified:** other keys, multiple simultaneous key colors, `0x41` clear behavior, session lifecycle, profile interaction, and timing/firmware variants. The **A-key subtest is complete**; milestone 6 remains in progress until those additional checks pass.
 
 ## Current contents
 
@@ -35,15 +35,16 @@
 ## Immediate next work
 
 1. PR #2 merged with Rust test + Clippy and Python test success on its branch. Check final `main` workflow status and follow-up formatting compliance.
-2. Have owner clone/pull and run read-only `cargo run --` and `cargo run -- --dry-run A ff0000`.
-3. With owner's explicit agreement, test `cargo run --release -- --write-key A ff0000 --confirm-device-write` and then `cargo run --release -- --clear --confirm-device-write`, reporting observed LED changes separately from successful USB submission.
-4. If RGB works, expand to additional keys/colors and integrate the Mini driver into `steelseriesgg-rs`. If not, investigate GG session initialization/capture and firmware state; never fuzz random commands.
-5. Continue with profile effects only after milestone 6 is observed on hardware.
+2. **Ask owner if the clear operation worked:** `./target/release/apex-mini-rgb --clear --confirm-device-write`; log whether the A key restored normal lighting. Do not assume the Output `0x41` command works yet.
+3. Independently verify a second key/color using the existing guarded `--write-key S 00ff00 --confirm-device-write`, then clear. Ask the owner to confirm the visible key and color.
+4. Implement opt-in multi-key / whole-keyboard static RGB using the now-hardware-confirmed `0x40` Feature packet encoder. Add tests for count, mapped key order, and CLI safety before live trials; run `cargo fmt`, tests, Clippy and update both docs.
+5. After multi-key hardware confirmation, integrate the Mini controller into `steelseriesgg-rs` or continue a native standalone application; postpone profile effects and actuation until separate verification.
 
 ## Completed PR and CI history
 
 - **2026-10-14 PR #1:** Repository, initial handover, Python read-only HID probe and CI.
-- **2026-10-14 PR #2:** Official Mini wired `0x40` direct RGB and `0x41` clear serialization, guarded independent Rust CLI, unit tests, Rust CI and updated setup/research. Branch tests and Clippy passed; hardware response remains **unverified**. Squash SHA `2ccb9f67d63d`.
+- **2026-10-14 PR #2:** Official Mini wired `0x40` direct RGB and `0x41` clear serialization, guarded independent Rust CLI, unit tests, Rust CI and updated setup/research. Branch tests and Clippy passed; **A-key red `0x40` lighting was subsequently confirmed by the owner**. Other features remain unverified. Squash SHA `2ccb9f67d63d`.
+- **2026-10-14 milestone:** Owner confirmed physical **A key turned red**, first hardware validation of the official Mini per-key feature format. Documented on `docs/confirm-a-key-hardware-rgb` for PR. Restore/clear and multi-key tests remain pending.
 
 ## Rolling documentation convention
 
