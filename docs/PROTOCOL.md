@@ -31,15 +31,15 @@ The `direct_write` byte layout is:
 
 For a single red `A` key, the expected report prefix is `00 40 01 04 FF 00 00`; remaining bytes are zero. The `clear_direct_write` Output prefix is `00 41` padded to 65 bytes. The independent Rust serialization logic and offline tests live in `src/lib.rs`. **No proprietary descriptor text or password is committed.**
 
-**Important:** These frame definitions are **verified against vendor static specifications**, *not yet observed working on a physical keyboard*. No claim of live functionality should be made until the owner confirms it.
+**Hardware verification (owner report, 2026-10-14):** the owner ran the dedicated A-key red RGB test and stated **“IT WORKED! ‘A’ turned red!”**. This **confirms the `0x40` Feature report produces a visible LED response** for that key on this keyboard. It does **not** verify the `0x41` clear Output operation, any other key, or multi-key payloads.
 
 ## Safety and unanswered questions
 
 - The `apex-mini-rgb` binary performs only read-only discovery unless the exact `--confirm-device-write` flag is provided.
 - It checks `1038:161e`, vendor usage page `0xffc0`, and exact report sizes before opening a HID node for writing.
 - It has an opt-in **one-key RGB Feature** operation and a separate **clear-direct-mode Output** operation. No flashing, actuation, profile writes, or arbitrary HID commands.
-- Official GG may require initialization, profile state, an active Prism service, or a particular write order before a command becomes visible. Those interactions are not yet experimentally confirmed.
-- A successful `ioctl` or HID `write` does **not** prove the RGB effect appeared. Record physical keyboard behavior.
+- This A-key test worked without a documented manual GG initialization sequence. Other runtime states, profiles, or firmware variants may still behave differently; no general initialization guarantee has been established.
+- The A-key LED response was **visually confirmed by the owner**. Continue requiring visible confirmation separately for every new RGB feature; successful `ioctl` or `write` alone is insufficient.
 
 ## Manual opt-in smoke test after CI passes
 

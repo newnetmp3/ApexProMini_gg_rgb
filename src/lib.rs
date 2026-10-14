@@ -2,7 +2,9 @@
 //! Based on the device's official GG 108.3 decrypted specifications, inspected
 //! locally. No vendor source or firmware is bundled or executed.
 //!
-//! Byte layout verified by static specification; not yet hardware-response tested.
+//! Byte layout verified by static specification; the wired Mini A-key red
+//! color response was confirmed by an owner hardware test on 2026-10-14.
+//! Other keys, clear mode, and multi-key payloads remain unverified.
 
 pub const VENDOR_ID: u16 = 0x1038;
 pub const PRODUCT_ID: u16 = 0x161e;

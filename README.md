@@ -2,7 +2,7 @@
 
 Native Linux research and driver-development workspace for the **wired SteelSeries Apex Pro Mini (USB `1038:161e`)**, using verified HID observations and local, legally obtained SteelSeries GG resources.
 
-**Current status:** The Mini's official **0x40 / 513-byte Feature** per-key RGB command and **0x41 / 65-byte Output** clear command have been recovered from GG device specifications. Independent Rust encoding and unit tests are implemented; **physical lighting behavior has not yet been verified**. Do not assume a successful HID write changes the keyboard.
+**Current status:** **First hardware success:** the wired Mini's A key **turned red** using the new Linux Rust `0x40` / 513-byte Feature command (owner-verified 2026-10-14). The `0x41` / 65-byte Output clear packet is implemented but **not yet confirmed working on the physical keyboard**; neither are other keys, multiple simultaneous colors, effects, or profiles.
 
 ## Quick start (read-only)
 
@@ -34,7 +34,7 @@ cargo build --release
 ./target/release/apex-mini-rgb --clear --confirm-device-write
 ```
 
-The two final commands **change RGB state**; run them only after reviewing the read-only output and accepting that lighting may need a keyboard reconnect or native profile reset. There is no firmware, macro, or actuation functionality in this crate. The `clear` command restores control to onboard lighting if the firmware honors its official command; a USB success message alone does not prove it.
+The two final commands **change RGB state**; the A-key color write has been verified on real hardware, but clear/direct-mode restoration still needs confirmation. Run them only after reviewing read-only output and accepting that lighting may need a keyboard reconnect or native profile reset. There is no firmware, macro, or actuation functionality in this crate. The `clear` command restores control to onboard lighting if the firmware honors its official command; a USB success message alone does not prove it.
 
 See [`docs/PROTOCOL.md`](docs/PROTOCOL.md) for the recovered frame layout and [`docs/ROADMAP.md`](docs/ROADMAP.md) for acceptance criteria.
 
