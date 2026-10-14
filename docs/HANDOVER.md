@@ -2,7 +2,7 @@
 
 **Updated:** 2026-10-14  
 **Repository:** https://github.com/newnetmp3/ApexProMini_gg_rgb  
-**Last merged hardware milestone:** PR #3, A-key red verified. **Current development:** `feature/multikey-static-rgb` (PR pending); native full-keyboard effects engine and passive Linux keypress input added. Recheck current GitHub main/PR and CI before continuing.  
+**Latest merged milestone:** [PR #4](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/4) merged as `570ccddee9c254bd2de28c7e9b1fb62ece192756` to `main`. Full-board effects renderer, Linux evdev ripple, and 31-key official Prism preset catalog shipped. Rust tests/Clippy and Python tests passed on the PR branch. **Full-board effect behavior is still awaiting owner hardware testing.**  
 **Hardware:** Wired SteelSeries Apex Pro Mini `1038:161e`; owner runs Arch Linux, KDE Wayland.
 
 ## Verified milestones
@@ -38,19 +38,20 @@
 
 ## Immediate next work
 
-1. Verify **all Rust unit tests + Clippy + Python tests** on the current feature branch; open/merge PR after green checks. Record final commit and actual CI result.
+1. PR #4 merged with successful Rust tests/Clippy and Python CI on the feature branch; check the latest `main` checks before further changes.
 2. Owner tests `--preview-effect wave` (read-only), then opt-in `--effect solid --color 2200ff --confirm-device-write`, followed by Ctrl+C. Confirm whether **all physical key LEDs change and onboard mode restores**.
 3. Owner uses `--list-inputs` to find an exact physical Mini `/dev/input/eventN`, then opt-in `--effect ripple --input /dev/input/eventN --accent ff5500 --confirm-device-write`. Confirm visible rings from letter keypresses; investigate seat ACL/udev if event open fails (do not use sudo blindly).
 4. Validate effects and approximate key coordinates on the real keyboard. Fix any non-responsive mapped keys, timing/tearing or degraded input behavior, and update docs.
 5. **Long-term GG parity:** inventory real built-in GG Prism preset names, parameters, gradients, idle/reactive modes from user-owned GG installation, compare against native renders, and add missing effects systematically. Track each in `docs/PRESET_COVERAGE.md`. Add GUI/editor and stored profiles after core effects stabilize.
 
-## Current work in progress (feature/multikey-static-rgb)
+## Latest merged milestone — PR #4
 
 - Reusable pure Rust full-key frame renderer with nine provisional effects, including spatial ripple and local keypress reactive overlays.
 - 68-entry RGB frame updates over already verified `0x40` Feature transport.
 - Linux evdev input reader on a specifically validated USB 1038:161e keyboard node, no input grabs/logs/network and no compositor-specific hook.
 - Animation FPS/speed/brightness bounds; SIGINT/SIGTERM handling; `0x41` restoration when effects stop or input disconnects.
-- Offline renderer/input/CLI tests added. **These new effect behaviors have not been verified on the owner's physical keyboard.**
+- Offline renderer/input/CLI tests added, Rust unit tests and Clippy plus Python checks passed. **These new effect behaviors have not been verified on the owner's physical keyboard.**
+- Official GG 108.3 Mac Prism migration research identified **31 distinct preset identifier keys** with the catalog and gaps documented in `docs/PRESET_COVERAGE.md`. These are not necessarily 31 simultaneously visible menu choices; no exact preset has been marked fully matched.
 
 
 
@@ -59,6 +60,8 @@
 - **2026-10-14 PR #1:** Repository, initial handover, Python read-only HID probe and CI.
 - **2026-10-14 PR #2:** Official Mini wired `0x40` direct RGB and `0x41` clear serialization, guarded independent Rust CLI, unit tests, Rust CI and updated setup/research. Branch tests and Clippy passed; **A-key red `0x40` lighting was subsequently confirmed by the owner**. Other features remain unverified. Squash SHA `2ccb9f67d63d`.
 - **2026-10-14 PR [#3](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/3):** Owner confirmed physical **A key turned red**; docs merged to `main` as `71fc653c701fad5f63daa23157c1e09d6d3a03cf`. **Follow-up hardware checks:** `0x41` clear restored onboard lighting and **S key turned green**; full-key frames and live presets still awaiting tests.
+
+- **2026-10-14 PR [#4](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/4):** Nine provisional native RGB effect renderers, full-key static frame, physically scoped Linux evdev keypress ripple/reactive input, bounded animation loop and Ctrl+C clear. All PR branch CI green; **new animations/ripple are not yet hardware verified**. Squash commit `570ccddee9c254bd2de28c7e9b1fb62ece192756`. Cataloged 31 official GG Prism preset identifiers for future exact behavior matching.
 
 ## Rolling documentation convention
 
