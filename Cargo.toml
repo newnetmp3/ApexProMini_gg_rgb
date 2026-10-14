@@ -25,3 +25,7 @@ eframe = { version = "=0.31.1", optional = true, default-features = false, featu
 name = "apex-mini-gui"
 path = "src/gui.rs"
 required-features = ["gui"]
+
+[[bin]]
+name = "prism-preview"
+path = "src/bin/prism_preview.rs"
