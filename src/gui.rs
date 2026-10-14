@@ -274,7 +274,7 @@ impl eframe::App for ControlCenter {
         egui::CentralPanel::default().show(ctx, |ui| {
             self.draw_keyboard(ui);
             ui.separator();
-            ui.label(&self.feedback);
+            ui.label(self.feedback.as_str());
             ui.add_space(8.0);
             ui.checkbox(&mut self.show_catalog, "Show SteelSeries GG preset migration catalog (31 identifiers)");
             if self.show_catalog {
