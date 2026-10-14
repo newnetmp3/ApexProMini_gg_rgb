@@ -2,7 +2,7 @@
 
 **Updated:** 2026-10-14  
 **Repository:** https://github.com/newnetmp3/ApexProMini_gg_rgb  
-**Latest merged milestone:** [PR #6](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/6), squash SHA `e22b2c4da690449d5a238feb5b5a6ac2a96999e8`. A Mini-only, explicit-install `uaccess` rule and permission troubleshooting are on `main`, with Rust and Python CI green on PR. **Owner still needs to install the udev rule and confirm input events + physical ripple.**  
+**Latest merged code milestone:** [PR #6](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/6), squash SHA `e22b2c4da690449d5a238feb5b5a6ac2a96999e8`, implementing a Mini-specific active-seat input ACL. **Owner's subsequent report: “IT WORKS!” in response to the ripple retest. Keypress-triggered ripple is now hardware-confirmed.** The separate optional systemd background service and reconnect behavior are not yet owner-tested.  
 **Hardware:** Wired SteelSeries Apex Pro Mini `1038:161e`; owner runs Arch Linux, KDE Wayland.
 
 ## Verified milestones
@@ -15,11 +15,14 @@
 6. **2026-10-14 hardware verification:** owner confirmed **A red**, **S green**, and **`0x41` clear successfully restoring onboard lighting**. Owner subsequently confirmed **the entire keyboard turned blue** using `--effect solid`. This hardware-verifies whole-board 68-key static RGB frame output.
 7. **2026-10-14 failure and confirmed blocker:** Owner reports no keypress ripple; `--list-inputs` finds `/dev/input/event11` and `/dev/input/event12` (both wired Mini) but indicates **no read access**; `--test-input` fails on both with `Permission denied (os error 13)`. Input permissions are **the verified immediate blocker**. Any renderer-level issues remain untested and should not be ruled out until events can be read. Do **not** mark reactive effects working.
 
+8. **2026-10-14 resolution — hardware verified:** after PR #6's device-scoped udev permissions fix and instructions, the owner responded **“IT WORKS!”** to the ripple test. Record the original no-access symptoms as historical diagnostic evidence. This confirms the previously missing **live keypress-triggered ripple is visibly working on the wired Mini**. The user has not separately confirmed precise ripple geometry, multiple simultaneous waves, daemon autostart, reconnection, or matching the official GG Reactive Ripple preset.
+
 ## Safety: do not conflate these conditions
 
 - **Statically verified:** command `0x40` / `0x41` report formats, key slot count and HID report types.
-- **Hardware observed:** correct endpoint/report lengths; generic `0x21` does not change Mini RGB; **A red, S green, `0x41` clear restore, and whole-keyboard solid blue**. **Ripple failed to react to presses**.
-- **Unverified:** simultaneous **different colors** on multiple keys, animated wave/rainbow, keypress ripple, exact physical coordinates, preset parity, profiles and firmware variants. Single-color full-board frame is verified; ripple failure remains open.
+- **Hardware observed:** correct endpoint/report lengths; generic `0x21` does not change Mini RGB; **A red, S green, `0x41` clear restore, and whole-keyboard solid blue**. **Ripple initially failed due to evdev EACCES; owner now confirms it works after the permission-fix milestone**.
+- **Hardware confirmed:** per-key A red, S green; full-board solid blue; `0x41` clear; **keypress-triggered ripple after fixing evdev access**.
+- **Not yet verified:** distinct simultaneous colors, other animated presets, geometric fidelity of the ripple, exact GG Reactive Ripple parity, systemd user service across login/unplug/replug, profiles, and firmware variants.
 
 ## Current contents
 
@@ -40,18 +43,18 @@
 
 ## Immediate next work
 
-1. PR #6 merged with device-scoped udev rule and installer. Check current `main` CI; **do not** treat ACL access as hardware-verified until owner checks it.
-2. Owner should opt in to installing `udev/71-apex-pro-mini-input.rules` via `bash scripts/install-input-permissions.sh`. This installs one keyboard-event-specific `TAG+=\"uaccess\"` rule for wired USB `1038:161e` under `/etc/udev/rules.d`; no broad input group, `chmod 666` or root daemon. Reconnect keyboard to refresh ACLs.
-3. Repeat read-only `--list-inputs` and `--test-input --seconds 10`; tap A, S, Space and look for HID codes `4`, `22`, `44`. If access still fails, gather `getfacl`, `udevadm info`, and graphical session/seat status. Only after successful keydown logging should owner retry `--effect ripple --confirm-device-write`; observe physical ripple before calling it working.
-4. Once ripple works, optionally install and enable the explicit `systemd --user` ripple daemon following `docs/SERVICE.md`. Its event stream is transient and unlogged. Check unplug/reconnect and SIGTERM restoring onboard lighting.
-5. Continue exact SteelSeries GG default Prism preset parity using the 31-identifier catalog, with separate physical verification of animation parameters and reactive layout.
+1. Preserve the **owner-confirmed ripple success** in the roadmap and coverage matrix. PR #6's narrow input ACL removed the `EACCES` blocker; do not regress by asking the owner to widen permissions.
+2. Optionally test the `systemd --user` ripple service after explicit opt-in (`bash scripts/install-user-service.sh` then `systemctl --user enable --now apex-mini-ripple.service`). Confirm it survives logout/login, reconnect, and cleanly restores the keyboard on SIGTERM. **These service behaviors remain unverified on hardware.**
+3. Hardware-QA the other native effects: wave, rainbow, breathing, sparkle, color shift, gradient, and reactive single key. Check performance, typing latency, Ctrl+C clear, and physical mapping.
+4. Compare the native ripple visually with the vendor's `reactiveRipple` defaults (color, speed, spatial propagation and layering). Working native ripple is **not** a claim of exact official SteelSeries GG preset parity.
+5. Continue catalog-driven reproduction of SteelSeries GG's 31 known Prism preset identifiers, then profile layering/persistence and GUI. Update the rolling handover and roadmap for each substantial, actually verified milestone.
 
 ## Latest merged permission fix — PR #6, active-seat Mini-only udev rule
 
 - `udev/71-apex-pro-mini-input.rules`: matches `SUBSYSTEM=input`, `event*`, `ID_INPUT_KEYBOARD=1`, USB VID:PID `1038:161e`; sets `MODE=0660` and `TAG+=uaccess` before `73-seat-late.rules`. Limits keypress access to logged-in active seat ACL rather than the global `input` group.
 - `scripts/install-input-permissions.sh`: explicit local installer requiring `sudo` only for one rule + udev reload; **does not start the service**. Reconnect keyboard after installation.
 - `tests/test_udev_rule.py`: assertions preventing broad rules or ordering regressions.
-- **PR #6 merged:** Rust/Clippy and Python test CI passed. **Pending:** owner access/keypress verification (A/S/Space) and actual visible ripple. This change is not a hardware-verified fix yet.
+- **PR #6 merged:** Rust/Clippy and Python test CI passed. **Owner follow-up: visible ripple now works.** The exact diagnostic counts were not supplied; do not invent per-key event observations. Service autostart/reconnection is a separate pending test.
 
 ## Latest merged fix — PR #5 reactive evdev monitoring and user daemon
 
@@ -79,9 +82,11 @@
 
 - **2026-10-14 PR [#4](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/4):** Nine provisional native RGB effect renderers, full-key static frame, physically scoped Linux evdev keypress ripple/reactive input, bounded animation loop and Ctrl+C clear. All PR branch CI green; **new animations/ripple are not yet hardware verified**. Squash commit `570ccddee9c254bd2de28c7e9b1fb62ece192756`. Cataloged 31 official GG Prism preset identifiers for future exact behavior matching.
 
-- **2026-10-14 PR [#5](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/5):** Fixed the evdev reader's dependence on one manual node; added read-only key event diagnostic, automatic multi-interface monitoring, reader disconnect handling, Linux keycode corrections, and optional disabled-by-default user-level systemd ripple daemon. PR checks passed; **actual keypress events and visible ripple are awaiting owner retest**. Squash SHA `608c668e580ec154065ace5810723f81e9a8bcbb`.
+- **2026-10-14 PR [#5](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/5):** Fixed the evdev reader's dependence on one manual node; added read-only key event diagnostic, automatic multi-interface monitoring, reader disconnect handling, Linux keycode corrections, and optional disabled-by-default user-level systemd ripple daemon. PR checks passed; **ripple subsequently became hardware-confirmed after PR #6's scoped ACL fix**. Squash SHA `608c668e580ec154065ace5810723f81e9a8bcbb`.
 
-- **2026-10-14 PR [#6](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/6):** Scoped systemd-logind udev `uaccess` ACL for Mini event nodes and opt-in installer, with regression tests and instructions. Squash SHA `e22b2c4da690449d5a238feb5b5a6ac2a96999e8`. CI green on PR. Owner must install/reconnect/verify `--test-input` and actual ripple.
+- **2026-10-14 PR [#6](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/6):** Scoped systemd-logind udev `uaccess` ACL for Mini event nodes and opt-in installer, with regression tests and instructions. Squash SHA `e22b2c4da690449d5a238feb5b5a6ac2a96999e8`. CI green on PR. Owner subsequently confirmed visible ripple working; systemd daemon and reconnect handling still unverified.
+
+- **2026-10-14 hardware validation (following PR #6):** Owner replied **“IT WORKS!”** after the Mini-specific udev access fix and ripple retest. This closes the missing-keypress ripple blocker, not the GG preset-parity or background service acceptance gates.
 
 ## Rolling documentation convention
 
