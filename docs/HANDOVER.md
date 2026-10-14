@@ -2,7 +2,7 @@
 
 **Updated:** 2026-10-14  
 **Repository:** https://github.com/newnetmp3/ApexProMini_gg_rgb  
-**Latest merged code milestone:** [PR #6](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/6), squash SHA `e22b2c4da690449d5a238feb5b5a6ac2a96999e8`, implementing a Mini-specific active-seat input ACL. **Owner's subsequent report: “IT WORKS!” in response to the ripple retest. Keypress-triggered ripple is now hardware-confirmed.** The separate optional systemd background service and reconnect behavior are not yet owner-tested.  
+**Latest merged documentation milestone:** [PR #7](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/7), squash SHA `045b0845561e222983aa9b9db79b77cc912bb7f4`, recording native ripple working on hardware following PR #6's Mini-only udev ACL. **Owner's subsequent report: “IT WORKS!” in response to the ripple retest. Keypress-triggered ripple is now hardware-confirmed.** The separate optional systemd background service and reconnect behavior are not yet owner-tested.  
 **Hardware:** Wired SteelSeries Apex Pro Mini `1038:161e`; owner runs Arch Linux, KDE Wayland.
 
 ## Verified milestones
@@ -87,6 +87,8 @@
 - **2026-10-14 PR [#6](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/6):** Scoped systemd-logind udev `uaccess` ACL for Mini event nodes and opt-in installer, with regression tests and instructions. Squash SHA `e22b2c4da690449d5a238feb5b5a6ac2a96999e8`. CI green on PR. Owner subsequently confirmed visible ripple working; systemd daemon and reconnect handling still unverified.
 
 - **2026-10-14 hardware validation (following PR #6):** Owner replied **“IT WORKS!”** after the Mini-specific udev access fix and ripple retest. This closes the missing-keypress ripple blocker, not the GG preset-parity or background service acceptance gates.
+
+- **2026-10-14 PR [#7](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/7):** Recording owner-confirmed keypress ripple operation following PR #6's permissions fix. Rust, Clippy and Python PR checks passed; squash SHA `045b0845561e222983aa9b9db79b77cc912bb7f4`. Service lifecycle and exact GG preset parity remain pending.
 
 ## Rolling documentation convention
 
