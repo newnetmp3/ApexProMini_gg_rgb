@@ -1,6 +1,6 @@
 # Apex Mini Prism — native Linux GUI milestone
 
-**Status:** First functional GUI implementation in Rust with eframe/egui, targeting KDE Plasma/Wayland and X11. **Not yet visually/hardware tested on the owner's Arch installation.** Prior owner hardware checks did verify basic per-key RGB, 68-key whole-board solid lighting, keypress ripple, clear, and the systemd user daemon.
+**Status:** First native GUI implementation merged as [PR #9](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/9), `edf7e45a8082a87b6ebf3e5119afc96f30684248`. GitHub Actions confirmed Linux native GUI compilation, headless Rust tests/Clippy and Python diagnostics. **Not yet visually/hardware tested on the owner's Arch installation.** Prior owner hardware checks did verify basic per-key RGB, 68-key whole-board solid lighting, keypress ripple, clear, and the systemd user daemon.
 
 ## Quick start (Arch Linux)
 
