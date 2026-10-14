@@ -49,7 +49,7 @@ reactive=gg:reactiveRipple
 | Base + idle + reactive composition, existing profile compatibility | **Implemented and software-tested** |
 | Multiple vendor variants / region masks | **36 additional mask/palette variants implemented across eight presets**; current Mini row/column alignment approximate and needs visual QA |
 | Vendor compositor: foreground/background graphics, apertures, blending, repetition and origin transforms | **Reusable independent compositor implemented**: ordered layers, opacity, four blend modes, scaled/rotated/origin-based motion, repeated phase and cosine/band masks. Three complex scenes connected. Vendor shader equations and actual per-preset settings **not verified** |
-| Per-key physical RGB coordinate/layout fidelity | **Requires device-side QA** |
+| Per-key physical RGB coordinate/layout fidelity | **Provisional width-aware five-row / 68-HID factory map implemented**; exact LED physical coordinates, historical six-row projection and ISO variants need device-side QA |
 | User's existing standalone ripple / service | **Previously confirmed working**; no altered HID transport |
 | Full parity to SteelSeries GG Prism default presets | **Not achieved** |
 
@@ -112,6 +112,12 @@ A new pure `src/reactive_factory.rs` independently models three GG source-named 
 To avoid prematurely dropping long source-period key animations at slow profile speed, `Stack::key_history_seconds` informs the daemon's in-memory pruning threshold and the GUI's simulated reactive preview. A Single Key animation slowed to 0.1× now retains its event for up to 12.5 seconds, rather than the earlier 2.5-second cutoff. The owner-confirmed independent native `ripple` retains its original lifetime and rendering.
 
 Offline SVG gallery phases are now sampled **relative to each GG reactive source period**, rather than using identical absolute sample times. All remains device-independent; **actual SteelSeries GG aperture geometry, interpolation, speed semantics, layer priority and fade curve parity are still unknown and should not be claimed**. See [`docs/REACTIVE_FACTORY.md`](REACTIVE_FACTORY.md).
+
+## Five-row Mini width-aware geometry (factory modes only)
+
+The historical renderer's first map spaced all keys uniformly. The independent `src/layout.rs` implementation now models five physical 15u keyboard rows and calculates the centers of large Space/Shift/Enter/Backspace keys using plausible keyboard-unit widths. It locates all 68 distinct Mini HID usages, of which four are optional locale/firmware variants. Factory-specific ripples, lines, analog-free heatmap approximations, source-region masks, and offline SVG previews use this consistent layout.
+
+**The owner-confirmed native ripple's previous coordinates remain unchanged.** The historical Prism `y0..5 / x0..21` source grid is **approximately projected** onto physical rows `0..4` → source rows `1..5`; exact LED positions and GG row/column region mapping cannot be certified without device reference. [Geometry mapping and acceptance](KEY_GEOMETRY.md).
 
 ## Safe operation
 

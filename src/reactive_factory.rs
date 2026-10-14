@@ -58,11 +58,11 @@ pub fn event_strength(
     if kind == Kind::SingleKey {
         return if hit.hid == hid { fade } else { 0.0 };
     }
-    let Some((origin_x, origin_y)) = crate::effects::position(hit.hid) else {
+    let Some(origin) = crate::layout::position(hit.hid) else {
         return 0.0;
     };
-    let dx = (x - origin_x).abs();
-    let dy = (y - origin_y).abs();
+    let dx = (x - origin.x).abs();
+    let dy = (y - origin.y).abs();
     // The farthest corners of the normalized board are around sqrt(2) apart.
     // 1.55 reaches them before the GG-derived trigger lifetime ends.
     let front = progress * 1.55;
@@ -118,7 +118,8 @@ mod tests {
     use super::*;
 
     fn sample(kind: Kind, hid: u8, when: f32, now: f32, duration: f32) -> f32 {
-        let (x, y) = crate::effects::position(hid).unwrap();
+        let position = crate::layout::position(hid).unwrap();
+        let (x, y) = (position.x, position.y);
         event_strength(kind, KeyHit { hid: 4, when }, hid, x, y, now, duration)
     }
 
@@ -148,7 +149,8 @@ mod tests {
         let start = sample(Kind::Ripple, 4, 0.0, 0.0, 0.25);
         let far_early = sample(Kind::Ripple, 39, 0.0, 0.0, 0.25);
         assert!(start > far_early);
-        let (x, y) = crate::effects::position(39).unwrap();
+        let p = crate::layout::position(39).unwrap();
+        let (x, y) = (p.x, p.y);
         let hit = KeyHit { hid: 4, when: 0.0 };
         let later = event_strength(Kind::Ripple, hit, 39, x, y, 0.16, 0.25);
         assert!(later > far_early);
@@ -158,8 +160,10 @@ mod tests {
     #[test]
     fn line_is_row_constrained_and_spreads_both_directions() {
         let hit = KeyHit { hid: 4, when: 0.0 };
-        let row = crate::effects::position(22).unwrap(); // S, same row as A
-        let other = crate::effects::position(26).unwrap(); // W, other row
+        let s = crate::layout::position(22).unwrap(); // S, same row as A
+        let row = (s.x, s.y);
+        let w = crate::layout::position(26).unwrap(); // W, other row
+        let other = (w.x, w.y);
         let same_row = event_strength(Kind::Line, hit, 22, row.0, row.1, 0.08, 0.5);
         let other_row = event_strength(Kind::Line, hit, 26, other.0, other.1, 0.08, 0.5);
         assert!(same_row > other_row);
@@ -168,7 +172,8 @@ mod tests {
     #[test]
     fn overlapping_hits_choose_brightest_without_overflow() {
         let config = Config { speed: 1.0, ..Config::default() };
-        let (x, y) = crate::effects::position(4).unwrap();
+        let p = crate::layout::position(4).unwrap();
+        let (x, y) = (p.x, p.y);
         let hit1 = KeyHit { hid: 4, when: 0.0 };
         let hit2 = KeyHit { hid: 22, when: 0.02 };
         let one = intensity(Kind::Ripple, Target { hid: 4, x, y }, 0.05, config, 250, &[hit1]);
@@ -179,7 +184,8 @@ mod tests {
 
     #[test]
     fn future_unknown_and_expired_events_are_ignored() {
-        let a = crate::effects::position(4).unwrap();
+        let p = crate::layout::position(4).unwrap();
+        let a = (p.x, p.y);
         assert_eq!(event_strength(Kind::Ripple, KeyHit { hid: 4, when: 0.5 },
             4, a.0, a.1, 0.0, 0.25), 0.0);
         assert_eq!(event_strength(Kind::Ripple, KeyHit { hid: 255, when: 0.0 },

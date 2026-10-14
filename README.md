@@ -132,6 +132,10 @@ cargo run --release -- --preview-effect gg:reactiveRipple
 
 The new profile engine also supports optional `idle=`, `idle_seconds=` and `reactive=` fields in the existing version-1 `profile.conf`. Old profiles load unchanged; no changes to previously confirmed HID packets or the daemon's default native ripple. More information: [factory preset technical audit](docs/FACTORY_PRESETS.md).
 
+## Factory Mini key-position geometry
+
+Factory-style `gg:<preset>` renderers now use independent width-aware positions for all 68 official HID usages, with conventional 60% key lengths (including a central 5.5u Space) and five-row placement projected approximately onto GG's historical six-row/22-column grid. Factory ripple, reactive line, regional masks and the read-only SVG gallery share these coordinates. **The user-confirmed native ripple is left untouched.** Accurate vendor physical LED positions and international variants still need device-side verification; see [`docs/KEY_GEOMETRY.md`](docs/KEY_GEOMETRY.md).
+
 ## GG historical reactive preset timing
 
 The independent factory-style modes `gg:reactiveRipple`, `gg:reactiveLine` and `gg:reactiveSingleKey` now use recovered nominal trigger periods (250/500/1250ms), with distinct radial, row-based and exact-key envelopes. Adaptive in-memory event retention prevents early cutoff of slow factory effects. GUI simulation and read-only SVG snapshots use matching timing. The original owner-confirmed native `ripple` remains unchanged. The actual SteelSeries GG shaders, key masks and decay equations are still unverified. [Technical event timing and acceptance](docs/REACTIVE_FACTORY.md).
