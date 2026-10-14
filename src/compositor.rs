@@ -188,15 +188,14 @@ fn mask_coverage(aperture: Aperture, x: f32, y: f32, time: f32, speed: f32) -> f
 
 pub fn blend_over(background: Rgb, foreground: Rgb, opacity: f32, mode: BlendMode) -> Rgb {
     let calc = |back: u8, front: u8| {
-        let result = match mode {
+        match mode {
             BlendMode::Normal => front,
             BlendMode::Add => back.saturating_add(front),
             BlendMode::Multiply => ((u16::from(back) * u16::from(front) + 127) / 255) as u8,
             BlendMode::Screen => {
                 (255 - ((u16::from(255 - back) * u16::from(255 - front) + 127) / 255)) as u8
             }
-        };
-        result
+        }
     };
     let target = Rgb {
         red: calc(background.red, foreground.red),
