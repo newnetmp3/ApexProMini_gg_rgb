@@ -92,9 +92,9 @@ The pure Rust engine handles separately timed overlapping events, no-press basel
 
 ## Factory-effect physical geometry and historical region mapping
 
-**In progress, branch `feature/factory-key-geometry-v2`:** Provisional 60% Mini layout now models five 15u-wide rows, real-width long-key centers (5.5u Space, 2u Backspace, 2.25u Enter, 2.25u/2.75u Shift) and all 68 known addressable HID usages. Factory effects and their read-only SVG preview use this consistent map; **owner-verified native ripple uses the previous geometry without modification**.
+**Merged [PR #15](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/15)** as `40b40eddea874dca364a448e9bdca220903a09eb` with Rust tests/Clippy, native GUI compilation, Python diagnostics and SVG gallery all green. The implementation uses: Provisional 60% Mini layout now models five 15u-wide rows, real-width long-key centers (5.5u Space, 2u Backspace, 2.25u Enter, 2.25u/2.75u Shift) and all 68 known addressable HID usages. Factory effects and their read-only SVG preview use this consistent map; **owner-verified native ripple uses the previous geometry without modification**.
 
-**Offline acceptance gates:** 68-code coverage, bounded positions, row widths, same-row versus other-row key relationships, source six-row/22-column approximate projection, valid 513-byte frames, and no native-ripple regressions. **Physical acceptance pending:** exact HID-to-LED positions, international variants and 36 GG source-region placements; real-world comparison deferred while owner is remote.
+**Offline acceptance gates passed:** 68-code coverage, bounded positions, row widths, same-row versus other-row key relationships, source six-row/22-column approximate projection, valid 513-byte frames, and no native-ripple regression. **Physical acceptance pending:** exact HID-to-LED positions, international variants and 36 GG source-region placements; real-world comparison deferred while owner is remote.
 
 Technical reference: [`docs/KEY_GEOMETRY.md`](KEY_GEOMETRY.md). This is an independent coordinate improvement, **not a certified GG layout port**.
 
