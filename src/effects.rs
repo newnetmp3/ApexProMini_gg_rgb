@@ -13,6 +13,11 @@ pub enum Preset {
     Ripple,
     Reactive,
     Sparkle,
+    Comet,
+    RainbowSplit,
+    PrismaticSweep,
+    Heatmap,
+    ReactiveLine,
 }
 impl Preset {
     pub fn as_str(self) -> &'static str {
@@ -20,6 +25,9 @@ impl Preset {
             Self::Solid => "solid", Self::Breathing => "breathing", Self::Rainbow => "rainbow",
             Self::Wave => "wave", Self::ColorShift => "color-shift", Self::Gradient => "gradient",
             Self::Ripple => "ripple", Self::Reactive => "reactive", Self::Sparkle => "sparkle",
+            Self::Comet => "comet", Self::RainbowSplit => "rainbow-split",
+            Self::PrismaticSweep => "prismatic-sweep", Self::Heatmap => "heatmap",
+            Self::ReactiveLine => "reactive-line",
         }
     }
     pub fn from_name(s: &str) -> Option<Self> {
@@ -33,16 +41,21 @@ impl Preset {
             "ripple" => Some(Self::Ripple),
             "reactive" => Some(Self::Reactive),
             "sparkle" => Some(Self::Sparkle),
+            "comet" => Some(Self::Comet),
+            "rainbow-split" => Some(Self::RainbowSplit),
+            "prismatic-sweep" => Some(Self::PrismaticSweep),
+            "heatmap" => Some(Self::Heatmap),
+            "reactive-line" => Some(Self::ReactiveLine),
             _ => None,
         }
     }
     pub fn needs_key_events(self) -> bool {
-        matches!(self, Self::Ripple | Self::Reactive)
+        matches!(self, Self::Ripple | Self::Reactive | Self::Heatmap | Self::ReactiveLine)
     }
 }
 
 pub const PRESET_NAMES: &str =
-    "solid, breathing, rainbow, wave, color-shift, gradient, sparkle, ripple, reactive";
+    "solid, breathing, rainbow, wave, color-shift, gradient, sparkle, ripple, reactive, comet, rainbow-split, prismatic-sweep, heatmap, reactive-line";
 
 #[derive(Clone, Copy, Debug)]
 pub struct Config {
@@ -140,6 +153,49 @@ pub fn frame(preset: Preset, settings: Config, seconds: f32, hits: &[KeyHit]) ->
                 // Deterministic spatial glitter: no RNG or dependencies.
                 let seed = ((hid as f32 * 71.133 + (t * 6.0).floor() * 17.71).sin() * 17891.0).fract().abs();
                 blend(dim(settings.base, 0.30), settings.accent, if seed > 0.91 { 1.0 } else { 0.0 })
+            }
+            Preset::Comet => {
+                // Traveling white/tinted head with soft fading trail.
+                let head = (t * 0.22).rem_euclid(1.0);
+                let behind = (head - x).rem_euclid(1.0);
+                let strength = (-behind * 12.0).exp();
+                blend(dim(settings.base, 0.1), settings.accent, strength)
+            }
+            Preset::RainbowSplit => {
+                // Two mirrored hue sweeps from the keyboard center.
+                hue((x - 0.5).abs() * 2.0 + y * 0.12 + t * 0.16)
+            }
+            Preset::PrismaticSweep => {
+                // Multi-axis independent color field, not an official Prism match.
+                let phi = x * 1.2 + y * 0.35 + (t * 0.19).sin() * 0.4;
+                hue(phi - t * 0.07)
+            }
+            Preset::Heatmap => {
+                // Locally accumulated recent key activity, red hot / cool background.
+                let mut heat = 0.0_f32;
+                for hit in hits {
+                    let age = seconds - hit.when;
+                    if !(0.0..=2.5).contains(&age) { continue; }
+                    let (hx, hy) = coords(hit.hid);
+                    let radius = ((x - hx).powi(2) + (y - hy).powi(2)).sqrt();
+                    heat += (-radius * 18.0).exp() * (1.0 - age / 2.5);
+                }
+                blend(dim(settings.base, 0.14), settings.accent, heat.min(1.0))
+            }
+            Preset::ReactiveLine => {
+                let mut max_luma = 0.0_f32;
+                for hit in hits {
+                    let age = seconds - hit.when;
+                    if !(0.0..=2.5).contains(&age) { continue; }
+                    let (hx, hy) = coords(hit.hid);
+                    let d_row = (y - hy).abs();
+                    let dx = (x - hx).abs();
+                    let front = dx - age * settings.speed * 0.56;
+                    let luma = (-((front / 0.08).powi(2))).exp()
+                        * (-((d_row / 0.17).powi(2))).exp() * (1.0 - age / 2.5);
+                    max_luma = max_luma.max(luma);
+                }
+                blend(dim(settings.base, 0.15), settings.accent, max_luma)
             }
             Preset::Ripple | Preset::Reactive => {
                 let mut intensity = 0.0_f32;
