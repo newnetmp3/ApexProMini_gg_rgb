@@ -2,7 +2,24 @@
 
 Native Linux research and driver-development workspace for the **wired SteelSeries Apex Pro Mini (USB `1038:161e`)**, using verified HID observations and local, legally obtained SteelSeries GG resources.
 
-**Current status:** **Hardware-verified:** A key red, S key green, full-keyboard solid blue, `0x41` restoring onboard lighting, and **live keypress-triggered ripple** after installing the Mini-specific input-access fix. Nine native effect renderers are available; the remaining animations, optional systemd background service, and exact SteelSeries GG Prism preset parity require separate testing.
+**Current status:** **Hardware-verified:** A red, S green, full-keyboard solid blue, `0x41` clear, and **live keypress ripple from the user-level systemd service**. A new native GUI and shared saved-profile service are under development; additional effects and exact GG Prism preset parity require separate hardware acceptance.
+
+## New: Apex Mini Prism desktop GUI (first milestone)
+
+A native **Rust/egui desktop application** now edits lighting presets on KDE Plasma/Wayland and X11. It includes a simulated keyboard map, effect selector, primary/accent color pickers, brightness, animation speed, FPS, click-to-select individual keys, editable per-key RGB overrides, and user service controls. The GUI does **not** open the RGB HID device, so it won't conflict with the existing already-working reactive systemd daemon.
+
+```bash
+cd ~/local-git/ApexProMini_gg_rgb
+git pull --ff-only
+bash scripts/install-gui.sh
+~/.local/bin/apex-mini-gui
+```
+
+This builds/installs the optional graphical executable (`apex-mini-gui`), updates the service to read the validated profile at `~/.config/apex-mini-rgb/profile.conf`, and adds a KDE application-menu launcher. It **preserves existing profiles** and does not automatically restart your running lighting daemon. Use **Apply & restart lighting** in the GUI to activate edits through the **single systemd user service**. CLI-only builds do not need GUI dependencies.
+
+The app currently exposes **fourteen native algorithms**, not exact faithful versions of all GG defaults. Its catalog shows the **31 historical GG Prism preset identifiers** with explicitly marked missing/approximate status. Exact vendor color palettes, base/idle/reactive layers, and behavior matching are active roadmap work; see [GUI documentation](docs/GUI.md) and [preset parity matrix](docs/PRESET_COVERAGE.md).
+
+**Status:** native GUI and profile-aware service are implemented and tested in CI, but require real KDE desktop and hardware acceptance before being marked working.
 
 ## Quick start (read-only)
 
@@ -61,7 +78,7 @@ cargo build --release
 
 Replace `eventN` with the exact keyboard input node printed by `--list-inputs`. It must be readable by your user, and the application verifies that it belongs to USB `1038:161e`. No keyboard grabbing or typed text logging. The effect stays active until Ctrl+C; normal onboard lighting should return via the already hardware-verified `0x41` clear report.
 
-Effects currently available: **solid, gradient, rainbow, wave, breathing, color-shift, sparkle, ripple, reactive**. See [`docs/PRESET_COVERAGE.md`](docs/PRESET_COVERAGE.md) for the longer-term goal of **matching every official GG default preset**, including **31 official GG 108.3 preset identifiers already recovered from packaged SQL migrations** (not necessarily all simultaneously visible in GG), profiles, and base/idle/reactive layers.
+Effects currently available: **solid, gradient, rainbow, wave, breathing, color-shift, sparkle, ripple, reactive, comet, rainbow-split, prismatic-sweep, heatmap, reactive-line**. These are independent prototypes pending vendor fidelity checks. See [`docs/PRESET_COVERAGE.md`](docs/PRESET_COVERAGE.md) for the longer-term goal of **matching every official GG default preset**, including **31 official GG 108.3 preset identifiers already recovered from packaged SQL migrations** (not necessarily all simultaneously visible in GG), profiles, and base/idle/reactive layers.
 
 **New effect rendering and keypress tracking need physical verification.** Avoid assuming a successful write means the effects are visually correct.
 

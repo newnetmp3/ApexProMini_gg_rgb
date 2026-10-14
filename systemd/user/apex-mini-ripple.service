@@ -8,7 +8,9 @@ StartLimitBurst=10
 [Service]
 Type=simple
 # This is the user's own compiled executable, not SteelSeries GG or a root daemon.
-ExecStart=%h/.local/bin/apex-mini-rgb --effect ripple --fps 24 --color 081020 --accent ff5500 --confirm-device-write
+# Effect/color/key overrides are read from this user-owned profile at startup.
+# Exactly one RGB writer: systemd owns the running device process.
+ExecStart=%h/.local/bin/apex-mini-rgb --effect ripple --profile %h/.config/apex-mini-rgb/profile.conf --confirm-device-write
 Restart=on-failure
 RestartSec=4
 TimeoutStopSec=5

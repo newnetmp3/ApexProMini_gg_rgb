@@ -17,3 +17,14 @@ jobs:
         run: cargo test --all-targets 
       - name: Static lint
         run: cargo clippy --all-targets  -- -D warnings
+
+  gui:
+    name: Native Linux GUI compile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install Wayland and X11 build requirements
+        run: sudo apt-get update && sudo apt-get install -y libxkbcommon-dev libwayland-dev libx11-dev libxcursor-dev libxi-dev libxrandr-dev libgl1-mesa-dev
+      - name: Check optional desktop GUI
+        run: cargo check --features gui --bin apex-mini-gui

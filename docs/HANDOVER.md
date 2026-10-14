@@ -2,7 +2,8 @@
 
 **Updated:** 2026-10-14  
 **Repository:** https://github.com/newnetmp3/ApexProMini_gg_rgb  
-**Latest merged milestone:** [PR #8](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/8), squash SHA `b53923e1228a7af9da0c3f5c226e1f402b8b7705`, documenting owner-verified active/enabled systemd user daemon with two Mini evdev readers. Rust and Python PR checks passed. **Owner's subsequent report: “IT WORKS!” in response to the ripple retest. Keypress-triggered ripple is now hardware-confirmed.** **The owner has now installed, enabled, and observed the systemd user service active and running for 4m42s** (user@1000; PID 561326); it detected the correct `0xffc0` 513-byte Feature/65-byte Output interface and started two Mini evdev readers. **Ripple from keypresses while the service runs, login persistence, device reconnect, and SIGTERM clear still require separate observation.**  
+**Latest merged milestone:** [PR #8](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/8), squash SHA `b53923e1228a7af9da0c3f5c226e1f402b8b7705`, documenting owner-verified active/enabled systemd user daemon with two Mini evdev readers. Rust and Python PR checks passed. **Owner's subsequent report: “IT WORKS!” in response to the ripple retest. Keypress-triggered ripple is now hardware-confirmed.** **The owner has now installed, enabled, and observed the systemd user service active and running for 4m42s** (user@1000; PID 561326); it detected the correct `0xffc0` 513-byte Feature/65-byte Output interface and started two Mini evdev readers. **User explicitly confirmed that keypress ripple works with the systemd service running**. Login persistence, physical USB reconnect, and clean stop/clear are separate outstanding QA gates.  
+**Current feature branch:** `feature/native-prism-gui-profile-engine` — GUI and profile-aware systemd integration; no GG preset-parity claims yet.  
 **Hardware:** Wired SteelSeries Apex Pro Mini `1038:161e`; owner runs Arch Linux, KDE Wayland.
 
 ## Verified milestones
@@ -19,12 +20,14 @@
 
 9. **Background service installation/start verified from systemd owner output (Oct 13, 2026, 23:14 EDT):** `apex-mini-ripple.service` is **loaded, enabled, active (running)** under `/user.slice/user-1000.slice/user@1000.service` with executable `%h/.local/bin/apex-mini-rgb`; uptime ~4m42s, 768 KB RAM (2.7 MB peak), two active Mini evdev readers and the expected 513-byte Feature / 65-byte Output reports on `/dev/hidraw7`. No startup error appears in the supplied logs. **This is service-liveness evidence, not separate confirmation of visible ripple while running via systemd.** Device node numbers are temporary.
 
+10. **Background ripple hardware-confirmed in user daemon:** owner explicitly answered **“yes”** when asked whether pressing keys causes visible ripples while `apex-mini-ripple.service` is running. Combined with the earlier systemd status, this verifies service-owned keypress-reactive RGB (not only manual CLI). No reboot/unplug or stop/clear lifecycle test has been supplied yet.
+
 ## Safety: do not conflate these conditions
 
 - **Statically verified:** command `0x40` / `0x41` report formats, key slot count and HID report types.
 - **Hardware observed:** correct endpoint/report lengths; generic `0x21` does not change Mini RGB; **A red, S green, `0x41` clear restore, and whole-keyboard solid blue**. **Ripple initially failed due to evdev EACCES; owner now confirms it works after the permission-fix milestone**.
 - **Hardware confirmed:** per-key A red, S green; full-board solid blue; `0x41` clear; **keypress-triggered ripple after fixing evdev access**.
-- **Not yet verified:** distinct simultaneous colors, other animated presets, geometric fidelity of the ripple, exact GG Reactive Ripple parity, **ripple visibly triggered under the now-running systemd user daemon**, service persistence across login/unplug/replug, reliable stop/clear, profiles, and firmware variants.
+- **Not yet verified:** distinct simultaneous colors, other animated presets, geometric fidelity of the ripple, exact GG Reactive Ripple parity, service persistence across login/unplug/replug, reliable stop/clear, profiles, and firmware variants.
 
 ## Current contents
 
@@ -34,7 +37,7 @@
 - `src/input.rs`: Mini-only passive Linux evdev, now opens all matching real keyboard event nodes automatically, validates `input_event` keydown, filters repeats/releases, reports reader loss and counts unmapped codes only during diagnostics. No key grabs or persisted typing.
 - `src/animate.rs`: bounded-rate animation with Ctrl+C/SIGTERM lighting restore; automatically selects Mini evdev readers. Adds read-only `--test-input --seconds 10` (prints key IDs only when requested) and read access status via `--list-inputs`.
 - `docs/PRESET_COVERAGE.md`: nine provisional native effects plus **31 official GG 108.3 Prism preset identifiers**. Not all necessarily visible at once.
-- `systemd/user/apex-mini-ripple.service`, `scripts/install-user-service.sh`, `docs/SERVICE.md`: optional user-level reactive lighting service with automatic restart after input loss. **Owner has now enabled and started it successfully**; per-key visuals during service operation and reboot/reconnect remain unverified. No root daemon or proprietary software.
+- `systemd/user/apex-mini-ripple.service`, `scripts/install-user-service.sh`, `docs/SERVICE.md`: optional user-level reactive lighting service with automatic restart after input loss. **Owner has now enabled and started it successfully**; **owner has now confirmed visible ripple while daemonized**. Reboot/reconnect and controlled stop remain unverified. No root daemon or proprietary software.
 - `Cargo.toml`, `.github/workflows/rust.yml`: zero-external-dependency Rust build/tests/Clippy.
 - `tools/hid_probe.py` + `tests/test_hid_probe.py`: original read-only Python probe.
 - `tools/decrypt_descriptor_local.py`: private-only wrapper around independent steelpatcher parser.
@@ -43,13 +46,23 @@
 - `.gitignore`: vendor binaries, decrypted descriptors, captures, firmware and credentials excluded.
 - `patches/steelseriesgg-rs-hid-report-fix.patch`: earlier locally verified upstream transport patch.
 
+## Current milestone: native GUI + saved effect profiles (feature/native-prism-gui-profile-engine)
+
+- **Owner-verified baseline:** manual RGB per-key and whole-board solid, direct-mode restore, keypress ripple, **and keypress ripple from the background `systemd --user` service**.
+- **New engine:** `src/profile.rs` strictly validates versioned `key=value` RGB profiles, including speed, brightness, frame rate and per-key HID overrides; saves atomically. No keystrokes or GG proprietary assets stored.
+- **Updated daemon integration:** `systemd/user/apex-mini-ripple.service` reads `~/.config/apex-mini-rgb/profile.conf` via `--profile`. `scripts/install-user-service.sh` seeds only missing profiles, atomically replaces in-use executables, and reloads the user unit without automatically starting it.
+- **Native GUI:** optional `eframe` feature and `apex-mini-gui` binary (`src/gui.rs`) with **fourteen** selectable native effect algorithms (original nine plus comet, rainbow split, prismatic sweep, heatmap and reactive line), live simulated key-map preview, per-key RGB painting, color pickers, speed/brightness/FPS, save/apply and service start/stop/enable controls. It does **not** write HID itself; the user daemon remains the sole writer.
+- **GUI install:** `bash scripts/install-gui.sh` compiles GUI, upgrades the profile-aware user daemon and installs a KDE-compatible `.desktop` launcher. No root daemon. `docs/GUI.md` specifies QA steps and limitations.
+- **Known parity gap:** 31 SteelSeries GG migration preset identifiers are indexed and fourteen native algorithms exist, but most factory parameters and effects are not yet faithfully reproduced. Native presets are independent prototypes, not a faithful port yet.
+- **Verification:** run headless Rust tests + Clippy and optional GUI compilation CI before PR merge. User must then validate the actual Plasma GUI and service interactions.
+
 ## Immediate next work
 
-1. Preserve the **owner-confirmed ripple success** in the roadmap and coverage matrix. PR #6's narrow input ACL removed the `EACCES` blocker; do not regress by asking the owner to widen permissions.
-2. **User service enabled and running:** owner showed `systemctl --user status apex-mini-ripple.service` reports loaded/enabled and active for ~4m42s; two input readers and proper Mini HID interface. **Ask whether pressing keys creates visible ripple with the user service running**. Then validate `systemctl --user stop apex-mini-ripple.service` restoring onboard lighting, `start` working again, and eventual logout/login and unplug/replug. Do not mark these remaining lifecycle or visible effects verified until owner feedback.
-3. Hardware-QA the other native effects: wave, rainbow, breathing, sparkle, color shift, gradient, and reactive single key. Check performance, typing latency, Ctrl+C clear, and physical mapping.
-4. Compare the native ripple visually with the vendor's `reactiveRipple` defaults (color, speed, spatial propagation and layering). Working native ripple is **not** a claim of exact official SteelSeries GG preset parity.
-5. Continue catalog-driven reproduction of SteelSeries GG's 31 known Prism preset identifiers, then profile layering/persistence and GUI. Update the rolling handover and roadmap for each substantial, actually verified milestone.
+1. Run and fix CI for the **optional eframe GUI**, headless CLI, strict profile decoder and Python udev tests; merge feature PR only after green.
+2. Ask owner to pull and run `bash scripts/install-gui.sh`. It updates the profile-aware user service while leaving the existing instance alone. Launch **Apex Mini Prism** from KDE or run `~/.local/bin/apex-mini-gui`.
+3. Owner tests GUI **Save** (no hardware change), **Apply & restart** (single-writer systemd), solid colors, animated effects, per-key overrides, and ripple; confirm no regressions.
+4. Verify service `Stop` restores onboard lighting, re-enabling profile works, saved settings survive login, and later physical USB disconnect/reconnect.
+5. Start the systematic full Prism default preset port: recover exact authorized GG preset configs for all 31 historical identifiers, add real renderer/layer behavior and corresponding GUI edit controls, and test each against actual hardware. Never mark a guessed analogue as faithful.
 
 ## Latest merged permission fix — PR #6, active-seat Mini-only udev rule
 
@@ -95,6 +108,9 @@
 - **2026-10-13 hardware/systemd session evidence:** user installed `scripts/install-user-service.sh`, explicitly enabled the user service, and showed an active PID 561326 for 4m42s. Successful endpoint discovery and two matching Mini input readers; no startup errors in supplied status. Visible per-key animation while daemonized and service lifecycle behavior are **pending**.
 
 - **2026-10-13 PR [#8](https://github.com/newnetmp3/ApexProMini_gg_rgb/pull/8):** Recorded owner-confirmed background user daemon startup/enabled/running, stable 4m42s status and Mini input endpoints; Rust and Python checks passed. Squash SHA `b53923e1228a7af9da0c3f5c226e1f402b8b7705`. Visible ripple under the daemon, reconnect and stop-cleanup require follow-up tests.
+
+- **2026-10-13 user daemon validation:** Owner confirmed visible keypress ripple while the enabled systemd user service was running, resolving the separate daemon-animation acceptance gate. Reconnect/logout/stop not yet tested.
+- **2026-10-14 GUI milestone (work in progress):** Native eframe editor + profile-backed daemon service + editable key overrides, with `docs/GUI.md`; compile/unit CI and owner desktop acceptance pending.
 
 ## Rolling documentation convention
 
