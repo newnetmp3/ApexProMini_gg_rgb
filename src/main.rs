@@ -1,8 +1,7 @@
-#[cfg(target_os = "linux")]
-mod animate;
-
 //! Read-only by default. Explicit confirmation is required for all HID writes.
 //! Only supports wired SteelSeries Apex Pro Mini USB 1038:161e.
+#[cfg(target_os = "linux")]
+mod animate;
 use apex_pro_mini::{
     encode_clear_direct_write, encode_direct_write, hid_from_key, parse_report_descriptor,
     rgb_from_hex, KeyColor, ReportKind, FEATURE_REPORT_BYTES, OUTPUT_REPORT_BYTES, PRODUCT_ID,
